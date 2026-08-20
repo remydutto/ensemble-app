@@ -1452,7 +1452,11 @@ async function startApp(coupleId, role){
   await loadCouple(coupleId, role);
   inviteCodeCache = await auth.getInviteCode(coupleId);
   document.getElementById('authGate').style.display = 'none';
-  document.getElementById('app').style.display = 'flex';
+  // On enlève juste la classe qui masque l'appli (plutôt qu'un style.display en
+  // ligne) pour que la mise en page bureau (@media, voir style.css) reste libre
+  // de choisir grid ou flex selon la largeur d'écran — un style inline gagnerait
+  // toujours contre les règles de la feuille de style, y compris responsives.
+  document.getElementById('app').classList.remove('is-hidden');
   applyTheme();
   onStoreChange(renderAll);
   renderAll();
@@ -1476,7 +1480,7 @@ async function boot(){
 
 auth.onAuthChange((session)=>{
   // Se déclenche notamment après le clic sur le lien magique reçu par email.
-  if(session && document.getElementById('app').style.display === 'none'){
+  if(session && document.getElementById('app').classList.contains('is-hidden')){
     boot();
   }
 });

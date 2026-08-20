@@ -53,6 +53,10 @@ body{
   display:flex;
   flex-direction:column;
 }
+/* Masque l'appli tant qu'on n'a pas de session + un couple liés (voir js/app.js).
+   Classe plutôt que style inline, pour que les règles ci-dessous (notamment la
+   mise en page bureau plus bas) restent libres de définir `display` elles-mêmes. */
+.phone.is-hidden{ display:none; }
 header.topbar{
   display:flex;
   align-items:center;
@@ -130,6 +134,8 @@ nav.bottomnav{
   padding:8px 6px calc(8px + env(safe-area-inset-bottom));
   z-index:20;
 }
+/* En-tête de la nav latérale, affiché uniquement en affichage bureau (voir plus bas). */
+.sidebar-brand{ display:none; }
 .navbtn{
   background:none;border:none;color:var(--muted);display:flex;flex-direction:column;
   align-items:center;gap:3px;font-size:10.5px;cursor:pointer;padding:4px 10px;border-radius:10px;
@@ -386,3 +392,96 @@ input:checked + .slider-tg::before{transform:translateX(18px);}
   border-radius:12px;padding:10px 12px;font-size:13px;
 }
 .onboard-choice{margin-top:16px;}
+
+/* ============================================================================
+   AFFICHAGE BUREAU (écrans larges, à partir de 900px)
+   En dessous de 900px (téléphones, tablettes en portrait), rien ne change :
+   toutes les règles ci-dessus restent la mise en page mobile intacte. Au-delà,
+   on bascule la même appli (mêmes boutons, même DOM, aucun changement de JS)
+   dans une mise en page bureau : nav latérale au lieu de la barre du bas, et
+   les écrans Statistiques/Réglages passent sur deux colonnes pour profiter de
+   la largeur.
+   ============================================================================ */
+@media (min-width: 900px){
+  body{ align-items:flex-start; }
+
+  .phone{
+    max-width:1180px;
+    margin:32px 0;
+    min-height:calc(100vh - 64px);
+    border-radius:24px;
+    box-shadow:var(--shadow);
+    border:1px solid var(--border);
+    display:grid;
+    grid-template-columns:220px 1fr;
+    grid-template-rows:auto 1fr;
+    grid-template-areas:
+      "nav topbar"
+      "nav main";
+    overflow:hidden;
+  }
+
+  header.topbar{
+    grid-area:topbar;
+    padding:18px 32px;
+    border-bottom:1px solid var(--border);
+    justify-content:flex-end;
+  }
+  header.topbar .brand{ display:none; }
+
+  main{
+    grid-area:main;
+    padding:28px 32px 40px;
+    overflow-y:auto;
+  }
+
+  nav.bottomnav{
+    grid-area:nav;
+    position:static;
+    left:auto;transform:none;
+    width:auto;max-width:none;height:100%;
+    flex-direction:column;
+    justify-content:flex-start;
+    align-items:stretch;
+    gap:4px;
+    padding:20px 14px;
+    border-top:none;
+    border-right:1px solid var(--border);
+  }
+  .sidebar-brand{
+    display:flex;align-items:center;gap:10px;
+    padding:6px 12px 20px;
+  }
+  .navbtn{
+    flex-direction:row;
+    justify-content:flex-start;
+    gap:10px;
+    font-size:13.5px;
+    padding:11px 12px;
+    border-radius:12px;
+  }
+  .navbtn svg{width:19px;height:19px;flex:none;}
+  .navbtn.active{
+    background:color-mix(in srgb, var(--accent) 12%, transparent);
+    color:var(--accent);
+  }
+
+  .fab{ left:auto; right:36px; bottom:36px; transform:none; }
+  .toast{ bottom:28px; }
+
+  #screen-home.active, #screen-history.active{ max-width:640px; margin-left:auto; margin-right:auto; }
+
+  #screen-stats.active, #screen-settings.active{
+    display:grid;
+    grid-template-columns:1fr 1fr;
+    gap:16px;
+    align-items:start;
+  }
+  #screen-stats.active > .section-title,
+  #screen-settings.active > .section-title{
+    grid-column:1 / -1;
+  }
+  #screen-stats.active .card, #screen-settings.active .card{
+    margin-bottom:0;
+  }
+}
