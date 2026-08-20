@@ -1,10 +1,13 @@
 // ============================================================================
-// Authentification (code à 6 chiffres envoyé par email) + création/rejoint d'un couple.
-// On utilise un code à taper plutôt qu'un simple lien cliquable : sur un téléphone,
-// cliquer le lien reçu dans l'appli Mail l'ouvre dans Safari/Chrome, un contexte de
-// stockage SÉPARÉ de l'appli installée sur l'écran d'accueil (PWA) — la session s'établit
-// dans le mauvais endroit et l'appli installée redemande de se connecter. Le code tapé
-// directement dans l'appli n'a pas ce problème : tout se passe dans le même contexte.
+// Authentification (lien magique par email) + création/rejoint d'un couple.
+//
+// À utiliser dans Safari/Chrome directement (pas via une icône ajoutée à l'écran
+// d'accueil) : sur iPhone, une icône installée a un stockage complètement séparé
+// de Safari, donc cliquer le lien reçu dans Mail (qui s'ouvre dans Safari) ne peut
+// jamais établir de session dans l'icône. `verifyOtp` ci-dessous reste disponible
+// si on veut un jour passer à un code à 6 chiffres tapé dans l'appli (ce qui
+// contournerait ce problème) — non branché à l'UI pour l'instant, car ça demande
+// de configurer un SMTP personnalisé côté Supabase pour personnaliser l'email.
 // ============================================================================
 import { supabase } from './supabase-client.js';
 

@@ -17,16 +17,13 @@ Compter environ 15-20 minutes, aucune compétence technique particulière requis
 
    Ces deux valeurs sont faites pour être publiques (elles sont visibles dans le code de n'importe quelle appli Supabase) — la vraie sécurité vient des règles qu'on vient d'installer avec `schema.sql`, qui empêchent quiconque de voir les données d'un autre couple.
 
-7. Toujours dans **Project Settings**, va dans **Authentication** → **URL Configuration**. Tu y reviendras à l'étape 3 une fois que tu auras l'adresse de ton site Vercel — pour l'instant tu peux passer à l'étape suivante.
-8. Dans **Authentication** → **Email Templates**, ouvre le modèle **Magic Link** et remplace son contenu par quelque chose comme ceci (l'important est la variable `{{ .Token }}`, qui insère le code à 6 chiffres) :
+7. Toujours dans **Project Settings**, va dans **Authentication** → **URL Configuration**, et renseigne (tu y reviendras à l'étape 3 une fois que tu auras l'adresse de ton site Vercel) :
+   - **Site URL** : ton URL Vercel (ex. `https://ensemble-xxxx.vercel.app`)
+   - **Redirect URLs** : ajoute la même URL
 
-```html
-<h2>Connexion à Ensemble</h2>
-<p>Ton code de connexion : <strong style="font-size:22px;letter-spacing:2px;">{{ .Token }}</strong></p>
-<p>Ce code est valable 1 heure.</p>
-```
+   C'est cette étape qui permet au lien de connexion reçu par email de vous ramener correctement dans l'appli.
 
-   C'est ce code que vous entrerez directement dans l'appli — plus fiable qu'un lien cliquable une fois l'appli installée sur l'écran d'accueil (voir l'encadré en bas de ce guide).
+> **Optionnel — pour plus tard.** Par défaut, Supabase envoie les emails de connexion via son propre service, avec un lien cliquable classique. Ça fonctionne très bien tant que vous ouvrez ce lien dans Safari/Chrome directement (voir l'encadré à l'étape 4). Si un jour tu veux une expérience "icône plein écran sur l'écran d'accueil" plus poussée (avec connexion par code à taper plutôt qu'un lien), il faudra configurer un service d'email personnalisé (SMTP) — demande-moi à ce moment-là, c'est un chantier à part qu'on peut faire plus tard sans bloquer le reste.
 
 ## 2. Configurer les clés dans le code
 
@@ -47,30 +44,28 @@ export const SUPABASE_ANON_KEY = "eyJ...ta-vraie-clé...";
    - Alternative sans GitHub : installe l'outil en ligne de commande Vercel (`npm i -g vercel`) et lance `vercel` puis `vercel --prod` depuis ce dossier.
 3. Dans les réglages du projet Vercel : **aucune configuration de build n'est nécessaire**. C'est un site 100% statique — laisse « Build Command » et « Output Directory » vides/par défaut (Vercel détecte un site statique automatiquement).
 4. Clique **Deploy**. Après une minute, tu obtiens une URL du type `https://ensemble-xxxx.vercel.app`.
-5. Retourne dans Supabase → **Authentication** → **URL Configuration**, et renseigne :
-   - **Site URL** : ton URL Vercel (ex. `https://ensemble-xxxx.vercel.app`)
-   - **Redirect URLs** : ajoute la même URL
-
-   C'est cette étape qui permet au lien de connexion reçu par email de vous ramener correctement dans l'appli.
+5. Si ce n'est pas déjà fait, retourne dans Supabase → **Authentication** → **URL Configuration** (étape 1.7) pour y mettre cette URL.
 
 ## 4. Premier lancement
 
-1. Ouvre l'URL Vercel sur ton téléphone ou ton ordinateur.
-2. Entre ton email → tu reçois un email avec un code à 6 chiffres.
-3. Reviens dans l'appli (sans cliquer sur rien dans l'email) et tape le code → tu es connecté·e.
+1. Ouvre l'URL Vercel **dans Safari ou Chrome directement** (pas via une icône ajoutée à l'écran d'accueil — voir l'encadré ci-dessous) sur ton téléphone ou ton ordinateur.
+2. Entre ton email → tu reçois un lien de connexion (aucun mot de passe à retenir).
+3. Clique le lien reçu par email, sur le même appareil → tu es connecté·e.
 4. Choisis **Créer notre espace**, entre les deux prénoms → un code d'invitation à 8 caractères est généré (visible ensuite dans Réglages).
 5. Envoie ce code à ton/ta partenaire. De son côté : même URL, son propre email, puis **Rejoindre mon/ma partenaire** avec le code.
 6. Vous êtes maintenant tous les deux connectés au même espace, synchronisé en temps réel.
 
-> **Pourquoi un code et pas un lien ?** Sur téléphone, cliquer un lien reçu dans l'appli Mail l'ouvre dans Safari/Chrome — un espace de stockage complètement séparé de l'appli une fois qu'elle est installée sur l'écran d'accueil. La connexion réussirait dans Safari, mais l'appli installée, elle, ne le saurait jamais et redemanderait de se connecter. Le code tapé directement dans l'appli n'a pas ce problème.
+> **Pourquoi éviter l'icône sur l'écran d'accueil pour se connecter ?** Sur iPhone, une icône ajoutée à l'écran d'accueil a un espace de stockage complètement séparé de Safari. Cliquer le lien reçu dans l'email ouvre toujours Safari (jamais l'icône) — la connexion réussit dans Safari, mais l'icône, elle, ne le saura jamais et redemandera de se connecter. Tant que vous utilisez le site directement dans Safari/Chrome (par exemple via un signet), ce problème n'existe pas.
 
-## 5. Installer l'appli comme une vraie appli (PWA)
+## 5. Un signet plutôt qu'une icône plein écran (pour l'instant)
 
-- **iPhone (Safari)** : ouvre l'URL, bouton Partager → « Sur l'écran d'accueil ».
-- **Android (Chrome)** : ouvre l'URL, menu ⋮ → « Installer l'application » (ou une bannière apparaît automatiquement).
-- **Ordinateur (Chrome/Edge)** : une icône d'installation apparaît dans la barre d'adresse.
+Pour retrouver l'appli facilement sans retomber sur l'écran de connexion :
 
-Une fois installée, l'appli s'ouvre en plein écran comme une appli native, avec son icône, et reste utilisable brièvement hors-ligne pour l'affichage (la synchronisation reprend dès que la connexion revient).
+- **iPhone (Safari)** : bouton Partager → « Ajouter aux favoris » (pas « Sur l'écran d'accueil »).
+- **Android (Chrome)** : menu ⋮ → « Ajouter à l'écran d'accueil » fonctionne en général bien mieux qu'sur iPhone (Chrome partage son stockage entre l'icône et le navigateur), mais en cas de souci, un signet classique marche aussi.
+- **Ordinateur** : bouton Partager"/étoile → favoris, comme n'importe quel site.
+
+L'appli reste installable en PWA plein écran (`manifest.json` et `sw.js` sont déjà en place) si tu veux tenter l'expérience icône malgré tout — simplement, la reconnexion depuis l'icône butera sur le même problème tant qu'on n'aura pas mis en place la connexion par code (voir l'encadré optionnel à l'étape 1.8).
 
 ## Notes techniques (au cas où)
 
