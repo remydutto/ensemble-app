@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#2a78d6">
+<link rel="manifest" href="/manifest.json">
+<link rel="icon" href="/icon-192.png">
+<link rel="apple-touch-icon" href="/icon-192.png">
+<title>Ensemble — dépenses de couple</title>
+<link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+<!-- ============================================================
+     PORTE D'ENTRÉE : connexion + création/rejoint du couple.
+     Reste affichée tant qu'on n'a pas de session + un couple lié.
+     ============================================================ -->
+<div class="authgate" id="authGate">
+  <div class="authcard">
+    <div class="brand" style="justify-content:center;margin-bottom:18px;">
+      <div class="brand-mark">E</div>
+      <div class="brand-name">Ensemble</div>
+    </div>
+
+    <!-- Étape 1 : connexion par lien magique -->
+    <div id="authStepSignin">
+      <div class="auth-title">Connecte-toi</div>
+      <div class="auth-sub">On t'envoie un lien de connexion par email, pas de mot de passe à retenir.</div>
+      <label class="field-label">Email</label>
+      <input type="email" id="authEmail" placeholder="toi@exemple.com" autocomplete="email">
+      <button class="submit-btn" id="authSendLink" type="button">Recevoir le lien de connexion</button>
+    </div>
+
+    <!-- Étape 2 : email envoyé -->
+    <div id="authStepCheckEmail" style="display:none;">
+      <div class="auth-title">Vérifie tes emails</div>
+      <div class="auth-sub">On a envoyé un lien de connexion à <strong id="authSentTo"></strong>. Ouvre-le sur cet appareil pour continuer.</div>
+      <button class="cancel-btn" id="authBackToSignin" type="button">Utiliser un autre email</button>
+    </div>
+
+    <!-- Étape 3 : choisir de créer ou rejoindre un couple -->
+    <div id="authStepOnboarding" style="display:none;">
+      <div class="auth-title">Bienvenue !</div>
+      <div class="auth-sub">Première connexion : crée votre espace à deux, ou rejoins celui de ton/ta partenaire avec son code d'invitation.</div>
+
+      <div class="onboard-choice">
+        <button class="mode-option" id="obChooseCreate" type="button" style="margin-top:0;">
+          <div class="mo-radio"></div>
+          <div><div class="mo-title">Créer notre espace</div><div class="mo-desc">Tu es le/la premier·ère à utiliser l'appli pour votre couple.</div></div>
+        </button>
+        <button class="mode-option" id="obChooseJoin" type="button">
+          <div class="mo-radio"></div>
+          <div><div class="mo-title">Rejoindre mon/ma partenaire</div><div class="mo-desc">Il/elle a déjà créé l'espace et t'a donné un code d'invitation.</div></div>
+        </button>
+      </div>
+
+      <div id="obCreateFields" style="display:none;">
+        <label class="field-label">Ton prénom</label>
+        <input type="text" id="obNameA" placeholder="Ex : Rémy">
+        <label class="field-label">Le prénom de ton/ta partenaire</label>
+        <input type="text" id="obNameB" placeholder="Ex : Camille">
+        <button class="submit-btn" id="obCreateSubmit" type="button">Créer notre espace</button>
+      </div>
+
+      <div id="obJoinFields" style="display:none;">
+        <label class="field-label">Code d'invitation</label>
+        <input type="text" id="obJoinCode" placeholder="Ex : a1b2c3d4" style="text-transform:lowercase;">
+        <button class="submit-btn" id="obJoinSubmit" type="button">Rejoindre</button>
+      </div>
+    </div>
+
+    <div class="auth-error" id="authError" style="display:none;"></div>
+  </div>
+</div>
+
+<!-- ============================================================
+     APPLI PRINCIPALE (identique au prototype validé)
+     ============================================================ -->
+<div class="phone" id="app" style="display:none;">
+
+  <header class="topbar">
+    <div class="brand">
+      <div class="brand-mark">E</div>
+      <div class="brand-name">Ensemble</div>
+    </div>
+    <div style="display:flex;align-items:center;gap:8px;">
+      <button class="theme-toggle" id="themeToggle" title="Changer de thème" type="button">◐</button>
+    </div>
+  </header>
+
+  <main>
+    <!-- HOME -->
+    <section class="screen active" id="screen-home">
+      <div class="card balance-card">
+        <div class="balance-label" id="homeBalanceLabel">Solde du couple</div>
+        <div class="balance-amount" id="homeBalanceAmount">—</div>
+        <div class="balance-sub" id="homeBalanceSub"></div>
+        <button class="settle-btn" id="settleBtn" type="button">Marquer comme réglé</button>
+      </div>
+
+      <div class="section-title">Dépenses récentes <button class="link-btn" data-nav="history">Tout voir</button></div>
+      <div class="card" style="padding:6px 14px;">
+        <div id="recentList"></div>
+      </div>
+    </section>
+
+    <!-- HISTORY -->
+    <section class="screen" id="screen-history">
+      <div class="section-title" style="margin-top:6px;">Historique</div>
+
+      <div class="month-accent-bar"></div>
+      <div class="month-nav">
+        <button class="month-nav-btn" id="histPrevMonth" type="button" aria-label="Mois précédent">‹</button>
+        <div class="month-nav-label" id="histMonthLabel"></div>
+        <button class="month-nav-btn" id="histNextMonth" type="button" aria-label="Mois suivant">›</button>
+      </div>
+
+      <div class="card" style="padding:0;overflow:hidden;">
+        <div class="mtable-head" id="mtableHead"></div>
+        <div id="mtableBody"></div>
+      </div>
+    </section>
+
+    <!-- STATS -->
+    <section class="screen" id="screen-stats">
+      <div class="section-title" style="margin-top:6px;">Statistiques</div>
+
+      <div class="card">
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">Par catégorie — <span id="statsMonthLabel"></span></div>
+        <div class="secondary small" style="margin-bottom:6px;">Total du mois : <strong id="statsMonthTotal" style="color:var(--text-primary);"></strong></div>
+        <div id="catBarList"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:2px;">Évolution du prorata</div>
+        <div class="secondary small" style="margin-bottom:8px;">Prorata du mois vs prorata cumulé, mois par mois.</div>
+        <div class="filter-row" id="ratioRangeRow"></div>
+        <div class="legend" id="ratioLegend"></div>
+        <div id="ratioAxisLabels" style="display:flex;justify-content:space-between;font-size:9.5px;font-weight:700;margin-top:6px;"></div>
+        <div class="chart-wrap" id="ratioChartWrap"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:10px;">Dépenses totales — 6 derniers mois</div>
+        <div class="chart-wrap" id="trendChartWrap"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13.5px;font-weight:700;margin-bottom:10px;">Qui a payé quoi, par mois</div>
+        <div class="legend" id="paidLegend"></div>
+        <div class="grouped-bars" id="paidBars"></div>
+      </div>
+    </section>
+
+    <!-- SETTINGS -->
+    <section class="screen" id="screen-settings">
+      <div class="section-title" style="margin-top:6px;">Réglages</div>
+
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Votre couple</div>
+        <div class="settings-row">
+          <div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="background:var(--s1);">A</div>Prénom (toi)</div>
+          <input type="text" id="nameA">
+        </div>
+        <div class="settings-row">
+          <div style="display:flex;align-items:center;gap:10px;"><div class="avatar" style="background:var(--s5);">B</div>Prénom (partenaire)</div>
+          <input type="text" id="nameB">
+        </div>
+        <div class="settings-row" style="border-bottom:none;">
+          <div>Code d'invitation</div>
+          <strong id="inviteCodeDisplay" style="font-family:monospace;"></strong>
+        </div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;">Mode de répartition</div>
+        <div class="secondary small" style="margin-top:2px;">S'applique à toutes les dépenses, dès maintenant.</div>
+        <div id="splitModeList"></div>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;">Catégories de dépenses</div>
+        <div class="secondary small" style="margin-top:2px;margin-bottom:4px;">Personnalise-les librement : ajoute les tiennes, renomme ou supprime celles que tu n'utilises pas.</div>
+        <div id="categoryList"></div>
+        <button class="add-recurring-btn" id="addCategoryBtn" type="button">+ Ajouter une catégorie</button>
+      </div>
+
+      <div class="card">
+        <div style="font-size:13px;font-weight:700;">Dépenses récurrentes</div>
+        <div class="secondary small" style="margin-top:2px;margin-bottom:4px;">Générées automatiquement chaque mois, comme une vraie dépense — modifiable ou pausable à tout moment.</div>
+        <div id="recurringList"></div>
+        <button class="add-recurring-btn" id="addRecurringBtn" type="button">+ Ajouter une récurrence</button>
+      </div>
+
+      <div class="card">
+        <div class="toggle-row">
+          <div>
+            <div style="font-size:13.5px;font-weight:700;">Thème sombre</div>
+            <div class="secondary small">Suit le système par défaut</div>
+          </div>
+          <label class="switch"><input type="checkbox" id="darkSwitch"><span class="slider-tg"></span></label>
+        </div>
+      </div>
+
+      <div class="card" style="text-align:center;">
+        <button class="cancel-btn" id="signOutBtn" type="button">Se déconnecter</button>
+      </div>
+    </section>
+  </main>
+
+  <button class="fab" id="fabAdd" type="button" title="Ajouter une dépense, un revenu ou un versement">+</button>
+
+  <nav class="bottomnav">
+    <button class="navbtn active" data-nav="home"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h14V10"/></svg>Accueil</button>
+    <button class="navbtn" data-nav="history"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 3"/></svg>Historique</button>
+    <button class="navbtn" data-nav="stats"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 20V10M12 20V4M20 20v-7"/></svg>Stats</button>
+    <button class="navbtn" data-nav="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09a1.65 1.65 0 00-1-1.51 1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06a1.65 1.65 0 00.33-1.82 1.65 1.65 0 00-1.51-1H3a2 2 0 010-4h.09a1.65 1.65 0 001.51-1 1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06a1.65 1.65 0 001.82.33H9a1.65 1.65 0 001-1.51V3a2 2 0 014 0v.09a1.65 1.65 0 001 1.51 1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06a1.65 1.65 0 00-.33 1.82V9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/></svg>Réglages</button>
+  </nav>
+</div>
+
+<!-- ADD EXPENSE MODAL -->
+<div class="modal-backdrop center-modal-backdrop" id="modalBackdrop">
+  <div class="modal">
+    <div class="modal-title" id="modalTitle">Nouvelle dépense</div>
+
+    <div class="seg" id="fEntryType">
+      <button type="button" data-val="expense" class="active">Dépense</button>
+      <button type="button" data-val="income">Revenu</button>
+      <button type="button" data-val="settlement">Versement</button>
+    </div>
+
+    <div class="amount-input-wrap" style="margin-top:14px;">
+      <input type="number" id="fAmount" placeholder="0,00" step="0.01" min="0">
+    </div>
+
+    <label class="field-label" id="fDescLabel">Description</label>
+    <input type="text" id="fDesc" placeholder="Ex : Courses Carrefour">
+
+    <label class="field-label">Date</label>
+    <input type="date" id="fDate">
+
+    <div id="expenseFields">
+      <label class="field-label">Catégorie</label>
+      <div class="catgrid" id="fCatGrid"></div>
+
+      <label class="field-label">Payé par</label>
+      <div class="seg" id="fPaidBy">
+        <button type="button" data-val="a" class="active">A</button>
+        <button type="button" data-val="b">B</button>
+      </div>
+
+      <label class="field-label">Répartition <span class="muted" style="font-weight:500;">(définie dans Réglages)</span></label>
+      <div class="split-preview" id="modeSplitPreview"></div>
+    </div>
+
+    <div id="incomeFields" style="display:none;">
+      <label class="field-label">Source</label>
+      <div class="catgrid" id="fIncSourceGrid"></div>
+
+      <label class="field-label">Pour</label>
+      <div class="seg" id="fIncPerson">
+        <button type="button" data-val="a" class="active">A</button>
+        <button type="button" data-val="b">B</button>
+      </div>
+    </div>
+
+    <div id="settlementFields" style="display:none;">
+      <label class="field-label">Qui règle ?</label>
+      <div class="seg" id="fSettleDebtor">
+        <button type="button" data-val="a" class="active">A</button>
+        <button type="button" data-val="b">B</button>
+      </div>
+      <div class="split-preview" id="settleHint"></div>
+    </div>
+
+    <button class="submit-btn" id="submitExpense" type="button">Ajouter la dépense</button>
+    <button class="delete-btn" id="deleteEntryBtn" type="button" style="display:none;">Supprimer</button>
+    <button class="cancel-btn" id="cancelExpense" type="button">Annuler</button>
+  </div>
+</div>
+
+<!-- CATEGORY MODAL -->
+<div class="modal-backdrop center-modal-backdrop" id="categoryModalBackdrop">
+  <div class="modal">
+    <div class="modal-title" id="categoryModalTitle">Nouvelle catégorie</div>
+
+    <label class="field-label">Nom</label>
+    <input type="text" id="catLabelInput" placeholder="Ex : Assurances">
+
+    <label class="field-label">Icône</label>
+    <div class="icon-grid" id="catIconGrid"></div>
+
+    <button class="submit-btn" id="submitCategory" type="button">Ajouter la catégorie</button>
+    <button class="delete-btn" id="deleteCategoryBtn" type="button" style="display:none;">Supprimer</button>
+    <button class="cancel-btn" id="cancelCategory" type="button">Annuler</button>
+  </div>
+</div>
+
+<!-- REASSIGN CATEGORY DIALOG -->
+<div class="confirm-backdrop" id="reassignBackdrop">
+  <div class="confirm-box">
+    <div class="confirm-title">Catégorie utilisée</div>
+    <div class="confirm-msg" id="reassignMsg"></div>
+    <label class="field-label" style="margin:12px 0 6px;">Déplacer ces dépenses vers</label>
+    <select id="reassignSelect"></select>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" id="reassignCancelBtn" type="button">Annuler</button>
+      <button class="confirm-ok danger" id="reassignOkBtn" type="button">Déplacer et supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- RECURRING EXPENSE MODAL -->
+<div class="modal-backdrop center-modal-backdrop" id="recurringModalBackdrop">
+  <div class="modal">
+    <div class="modal-title" id="recurringModalTitle">Nouvelle récurrence</div>
+
+    <div class="amount-input-wrap" style="margin-top:14px;">
+      <input type="number" id="recAmount" placeholder="0,00" step="0.01" min="0">
+    </div>
+
+    <label class="field-label">Description</label>
+    <input type="text" id="recDesc" placeholder="Ex : Loyer + charges">
+
+    <label class="field-label">Catégorie</label>
+    <div class="catgrid" id="recCatGrid"></div>
+
+    <label class="field-label">Payé par</label>
+    <div class="seg" id="recPaidBy">
+      <button type="button" data-val="a" class="active">A</button>
+      <button type="button" data-val="b">B</button>
+    </div>
+
+    <label class="field-label">Jour du mois</label>
+    <input type="number" id="recDay" min="1" max="28" value="1">
+
+    <div class="toggle-row" style="padding-left:0;padding-right:0;">
+      <div>
+        <div style="font-size:13.5px;font-weight:700;">Active</div>
+        <div class="secondary small">Génère une dépense chaque mois automatiquement.</div>
+      </div>
+      <label class="switch"><input type="checkbox" id="recActive" checked><span class="slider-tg"></span></label>
+    </div>
+
+    <button class="submit-btn" id="submitRecurring" type="button">Ajouter la récurrence</button>
+    <button class="delete-btn" id="deleteRecurringBtn" type="button" style="display:none;">Supprimer</button>
+    <button class="cancel-btn" id="cancelRecurring" type="button">Annuler</button>
+  </div>
+</div>
+
+<!-- CONFIRMATION DIALOG -->
+<div class="confirm-backdrop" id="confirmBackdrop">
+  <div class="confirm-box">
+    <div class="confirm-title" id="confirmTitle"></div>
+    <div class="confirm-msg" id="confirmMsg"></div>
+    <div class="confirm-actions">
+      <button class="confirm-cancel" id="confirmCancelBtn" type="button">Annuler</button>
+      <button class="confirm-ok" id="confirmOkBtn" type="button">Confirmer</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script type="module" src="/js/app.js"></script>
+</body>
+</html>
