@@ -35,7 +35,10 @@
     <!-- Étape 2 : email envoyé -->
     <div id="authStepCheckEmail" style="display:none;">
       <div class="auth-title">Vérifie tes emails</div>
-      <div class="auth-sub">On a envoyé un lien de connexion à <strong id="authSentTo"></strong>. Ouvre-le sur cet appareil pour continuer.</div>
+      <div class="auth-sub">On a envoyé un code à 6 chiffres à <strong id="authSentTo"></strong>. Entre-le ci-dessous pour continuer (sur téléphone, ne clique pas le lien de l'email : tape plutôt le code ici, directement dans l'appli).</div>
+      <label class="field-label">Code à 6 chiffres</label>
+      <input type="text" id="authCodeInput" inputmode="numeric" pattern="[0-9]*" maxlength="6" placeholder="123456" autocomplete="one-time-code">
+      <button class="submit-btn" id="authVerifyCode" type="button">Valider le code</button>
       <button class="cancel-btn" id="authBackToSignin" type="button">Utiliser un autre email</button>
     </div>
 

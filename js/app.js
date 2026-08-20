@@ -1405,17 +1405,35 @@ function showAuthError(msg){
   el.style.display = 'block';
 }
 
+let pendingAuthEmail = null;
+
 document.getElementById('authSendLink').addEventListener('click', async ()=>{
   const email = document.getElementById('authEmail').value.trim();
   if(!email){ showAuthError("Indique ton email."); return; }
   try{
     showAuthError(null);
     await auth.signInWithEmail(email);
+    pendingAuthEmail = email;
     document.getElementById('authSentTo').textContent = email;
+    document.getElementById('authCodeInput').value = "";
     showAuthStep('checkEmail');
   } catch(err){ showAuthError(err.message); }
 });
-document.getElementById('authBackToSignin').addEventListener('click', ()=>showAuthStep('signin'));
+document.getElementById('authBackToSignin').addEventListener('click', ()=>{ pendingAuthEmail = null; showAuthStep('signin'); });
+
+async function submitAuthCode(){
+  const code = document.getElementById('authCodeInput').value.trim();
+  if(!pendingAuthEmail){ showAuthStep('signin'); return; }
+  if(!code){ showAuthError("Entre le code reçu par email."); return; }
+  try{
+    showAuthError(null);
+    await auth.verifyOtp(pendingAuthEmail, code);
+    // La session est maintenant établie ; le listener auth.onAuthChange plus bas
+    // détecte le SIGNED_IN et lance boot() automatiquement.
+  } catch(err){ showAuthError(err.message); }
+}
+document.getElementById('authVerifyCode').addEventListener('click', submitAuthCode);
+document.getElementById('authCodeInput').addEventListener('keydown', (e)=>{ if(e.key === 'Enter') submitAuthCode(); });
 
 document.getElementById('obChooseCreate').addEventListener('click', ()=>{
   document.querySelectorAll('.onboard-choice .mode-option').forEach(b=>b.classList.remove('selected'));

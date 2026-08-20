@@ -18,6 +18,15 @@ Compter environ 15-20 minutes, aucune compétence technique particulière requis
    Ces deux valeurs sont faites pour être publiques (elles sont visibles dans le code de n'importe quelle appli Supabase) — la vraie sécurité vient des règles qu'on vient d'installer avec `schema.sql`, qui empêchent quiconque de voir les données d'un autre couple.
 
 7. Toujours dans **Project Settings**, va dans **Authentication** → **URL Configuration**. Tu y reviendras à l'étape 3 une fois que tu auras l'adresse de ton site Vercel — pour l'instant tu peux passer à l'étape suivante.
+8. Dans **Authentication** → **Email Templates**, ouvre le modèle **Magic Link** et remplace son contenu par quelque chose comme ceci (l'important est la variable `{{ .Token }}`, qui insère le code à 6 chiffres) :
+
+```html
+<h2>Connexion à Ensemble</h2>
+<p>Ton code de connexion : <strong style="font-size:22px;letter-spacing:2px;">{{ .Token }}</strong></p>
+<p>Ce code est valable 1 heure.</p>
+```
+
+   C'est ce code que vous entrerez directement dans l'appli — plus fiable qu'un lien cliquable une fois l'appli installée sur l'écran d'accueil (voir l'encadré en bas de ce guide).
 
 ## 2. Configurer les clés dans le code
 
@@ -47,11 +56,13 @@ export const SUPABASE_ANON_KEY = "eyJ...ta-vraie-clé...";
 ## 4. Premier lancement
 
 1. Ouvre l'URL Vercel sur ton téléphone ou ton ordinateur.
-2. Entre ton email → tu reçois un lien de connexion (aucun mot de passe à retenir).
-3. Clique le lien reçu par email (sur le même appareil) → tu es connecté·e.
+2. Entre ton email → tu reçois un email avec un code à 6 chiffres.
+3. Reviens dans l'appli (sans cliquer sur rien dans l'email) et tape le code → tu es connecté·e.
 4. Choisis **Créer notre espace**, entre les deux prénoms → un code d'invitation à 8 caractères est généré (visible ensuite dans Réglages).
 5. Envoie ce code à ton/ta partenaire. De son côté : même URL, son propre email, puis **Rejoindre mon/ma partenaire** avec le code.
 6. Vous êtes maintenant tous les deux connectés au même espace, synchronisé en temps réel.
+
+> **Pourquoi un code et pas un lien ?** Sur téléphone, cliquer un lien reçu dans l'appli Mail l'ouvre dans Safari/Chrome — un espace de stockage complètement séparé de l'appli une fois qu'elle est installée sur l'écran d'accueil. La connexion réussirait dans Safari, mais l'appli installée, elle, ne le saurait jamais et redemanderait de se connecter. Le code tapé directement dans l'appli n'a pas ce problème.
 
 ## 5. Installer l'appli comme une vraie appli (PWA)
 

@@ -1,5 +1,10 @@
 // ============================================================================
-// Authentification (lien magique par email) + création/rejoint d'un couple.
+// Authentification (code à 6 chiffres envoyé par email) + création/rejoint d'un couple.
+// On utilise un code à taper plutôt qu'un simple lien cliquable : sur un téléphone,
+// cliquer le lien reçu dans l'appli Mail l'ouvre dans Safari/Chrome, un contexte de
+// stockage SÉPARÉ de l'appli installée sur l'écran d'accueil (PWA) — la session s'établit
+// dans le mauvais endroit et l'appli installée redemande de se connecter. Le code tapé
+// directement dans l'appli n'a pas ce problème : tout se passe dans le même contexte.
 // ============================================================================
 import { supabase } from './supabase-client.js';
 
@@ -19,6 +24,14 @@ export async function signInWithEmail(email) {
     options: { emailRedirectTo: window.location.origin },
   });
   if (error) throw error;
+}
+
+// Vérifie le code à 6 chiffres reçu par email et établit la session — se fait
+// entièrement dans l'onglet/l'appli courant·e, sans jamais changer de contexte.
+export async function verifyOtp(email, token) {
+  const { data, error } = await supabase.auth.verifyOtp({ email, token, type: 'email' });
+  if (error) throw error;
+  return data.session;
 }
 
 export async function signOut() {
