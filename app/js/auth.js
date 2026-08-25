@@ -9,6 +9,7 @@
 // veut un jour un mode "lien reçu par email" en plus (ex. mot de passe oublié).
 // ============================================================================
 import { supabase } from './supabase-client.js';
+import { DEMO_MODE } from './store.js';
 
 export async function getSession() {
   const { data, error } = await supabase.auth.getSession();
@@ -66,6 +67,7 @@ export async function signOut() {
 // Change le mot de passe du compte connecté — nécessite une session active
 // (donc d'être déjà connecté), pas d'email envoyé, aucune limite.
 export async function updatePassword(newPassword) {
+  if (DEMO_MODE) throw new Error("Mode démo : impossible de changer un mot de passe ici. Crée ton compte pour de vrai !");
   const { error } = await supabase.auth.updateUser({ password: newPassword });
   if (error) throw error;
 }

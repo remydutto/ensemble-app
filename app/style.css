@@ -57,6 +57,12 @@ body{
    Classe plutôt que style inline, pour que les règles ci-dessous (notamment la
    mise en page bureau plus bas) restent libres de définir `display` elles-mêmes. */
 .phone.is-hidden{ display:none; }
+.demo-banner{
+  background:var(--accent);color:#fff;font-size:12.5px;font-weight:600;
+  text-align:center;padding:9px 14px;display:flex;flex-wrap:wrap;
+  justify-content:center;align-items:center;gap:8px;
+}
+.demo-banner a{color:#fff;font-weight:700;text-decoration:underline;}
 header.topbar{
   display:flex;
   align-items:center;
@@ -433,12 +439,14 @@ input:checked + .slider-tg::before{transform:translateX(18px);}
     border:1px solid var(--border);
     display:grid;
     grid-template-columns:220px 1fr;
-    grid-template-rows:auto 1fr;
+    grid-template-rows:auto auto 1fr;
     grid-template-areas:
+      "banner banner"
       "nav topbar"
       "nav main";
     overflow:hidden;
   }
+  .demo-banner{ grid-area:banner; }
 
   header.topbar{
     grid-area:topbar;

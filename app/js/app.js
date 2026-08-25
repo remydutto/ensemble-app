@@ -9,7 +9,7 @@
 import { supabase } from './supabase-client.js';
 import * as auth from './auth.js';
 import * as calc from './calc.js';
-import { store, onStoreChange, loadCouple, catOf, nameOf,
+import { store, onStoreChange, loadCouple, catOf, nameOf, DEMO_MODE,
   addExpense, updateExpense, deleteExpense,
   addIncome, updateIncome, deleteIncome,
   addSettlement, updateSettlement, deleteSettlement,
@@ -1515,7 +1515,7 @@ document.getElementById('obJoinSubmit').addEventListener('click', async ()=>{
 
 async function startApp(coupleId, role){
   await loadCouple(coupleId, role);
-  inviteCodeCache = await auth.getInviteCode(coupleId);
+  inviteCodeCache = DEMO_MODE ? 'demo1234' : await auth.getInviteCode(coupleId);
   document.getElementById('authGate').style.display = 'none';
   // On enlève juste la classe qui masque l'appli (plutôt qu'un style.display en
   // ligne) pour que la mise en page bureau (@media, voir style.css) reste libre
@@ -1543,14 +1543,19 @@ async function boot(){
   }
 }
 
-auth.onAuthChange((session)=>{
-  // Se déclenche notamment après le clic sur le lien magique reçu par email.
-  if(session && document.getElementById('app').classList.contains('is-hidden')){
-    boot();
-  }
-});
-
-boot();
+if(DEMO_MODE){
+  // Mode démo (voir demo.html) : aucune authentification, on démarre directement
+  // avec les données fictives générées par store.js.
+  startApp('demo-couple', 'a');
+} else {
+  auth.onAuthChange((session)=>{
+    // Se déclenche notamment après le clic sur le lien magique reçu par email.
+    if(session && document.getElementById('app').classList.contains('is-hidden')){
+      boot();
+    }
+  });
+  boot();
+}
 
 /* ============================================================================
    PWA : enregistrement du service worker (coquille en cache, usage hors-ligne basique)

@@ -5,10 +5,11 @@
 // requêtes passent toujours directement par le réseau, pour ne jamais servir
 // de données ou une session périmées.
 // ============================================================================
-const CACHE_NAME = "ensemble-shell-v6";
+const CACHE_NAME = "ensemble-shell-v7";
 const APP_SHELL = [
   "./",
   "index.html",
+  "demo.html",
   "style.css",
   "manifest.json",
   "icon-192.png",
