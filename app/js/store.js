@@ -98,23 +98,30 @@ function subscribeRealtime(coupleId) {
 }
 
 // ----------------------------------------------------------------------------
-// Données fictives du mode démo — un couple, des catégories, et 4 mois
-// d'historique généré autour de la date du jour, pour que les graphiques et
-// statistiques aient de quoi s'afficher normalement.
+// Données fictives du mode démo — un couple, des catégories, et 6 mois
+// d'historique généré autour de la date du jour. Volontairement irrégulier
+// (montants variables, dépenses ponctuelles, revenus inégaux entre les deux
+// personnes) pour bien montrer l'intérêt de la répartition automatique et
+// des graphiques, plutôt qu'un mois copié-collé six fois.
 // ----------------------------------------------------------------------------
 function pad2(n) { return String(n).padStart(2, '0'); }
+function rand(min, max) { return Math.random() * (max - min) + min; }
+function randInt(min, max) { return Math.floor(rand(min, max + 1)); }
+function pick(arr) { return arr[randInt(0, arr.length - 1)]; }
+function round2(n) { return Math.round(n * 100) / 100; }
 
 function seedDemoData() {
   const today = new Date();
 
   const catDefs = [
-    { label: 'Courses',      icon: '🛒', color: '--s1' },
-    { label: 'Loyer',        icon: '🏠', color: '--s2' },
-    { label: 'Transport',    icon: '🚗', color: '--s3' },
-    { label: 'Loisirs',      icon: '🎬', color: '--s4' },
-    { label: 'Restaurants',  icon: '🍽️', color: '--s5' },
-    { label: 'Santé',        icon: '💊', color: '--s6' },
-    { label: 'Abonnements',  icon: '📺', color: '--s7' },
+    { label: 'Courses',           icon: '🛒', color: '--s1' },
+    { label: 'Loyer',             icon: '🏠', color: '--s2' },
+    { label: 'Transport',         icon: '🚗', color: '--s3' },
+    { label: 'Loisirs',           icon: '🎬', color: '--s4' },
+    { label: 'Restaurants',       icon: '🍽️', color: '--s5' },
+    { label: 'Santé',             icon: '💊', color: '--s6' },
+    { label: 'Abonnements',       icon: '📺', color: '--s7' },
+    { label: 'Voyages & Cadeaux', icon: '🎁', color: '--s8' },
   ];
   store.categories = catDefs.map((c, i) => ({ id: `demo-cat-${i}`, couple_id: 'demo-couple', ...c }));
   const catId = label => store.categories.find(c => c.label === label).id;
@@ -122,39 +129,80 @@ function seedDemoData() {
   store.coupleId = 'demo-couple';
   store.memberAName = 'Alex';
   store.memberBName = 'Camille';
+  // Revenus volontairement inégaux entre les deux (voir plus bas) : ça met en
+  // valeur l'intérêt du mode "cumulative" (répartition au prorata des revenus)
+  // plutôt qu'un simple 50/50.
   store.splitMode = 'cumulative';
 
   const expenses = [];
   const incomeEntries = [];
-  let eid = 0, iid = 0;
+  const settlements = [];
+  let eid = 0, iid = 0, sid = 0;
 
-  for (let monthsAgo = 3; monthsAgo >= 0; monthsAgo--) {
+  // Ponctuels : un par mois maximum, pas tous les mois — donne des pics visibles
+  // sur le graphique "Dépenses totales" plutôt qu'une courbe plate.
+  const oneOffs = [
+    { label: 'Week-end à la mer', amount: 340, cat: 'Voyages & Cadeaux', day: 22 },
+    { label: 'Cadeau anniversaire', amount: 75, cat: 'Voyages & Cadeaux', day: 14 },
+    { label: 'Réparation voiture', amount: 265, cat: 'Transport', day: 9 },
+    { label: 'Nouveau canapé', amount: 480, cat: 'Loisirs', day: 18 },
+    { label: 'Cadeaux de Noël', amount: 210, cat: 'Voyages & Cadeaux', day: 20 },
+  ];
+  let oneOffIdx = 0;
+
+  for (let monthsAgo = 5; monthsAgo >= 0; monthsAgo--) {
     const d = new Date(today.getFullYear(), today.getMonth() - monthsAgo, 1);
     const mk = `${d.getFullYear()}-${pad2(d.getMonth() + 1)}`;
 
-    incomeEntries.push({ id: `demo-inc-${iid++}`, couple_id: 'demo-couple', date: `${mk}-01`, source: 'salaire', description: 'Salaire', amount: 2200, person: 'a' });
-    incomeEntries.push({ id: `demo-inc-${iid++}`, couple_id: 'demo-couple', date: `${mk}-01`, source: 'salaire', description: 'Salaire', amount: 1900, person: 'b' });
+    // Revenus : base inégale + petite variation + prime/freelance occasionnels.
+    incomeEntries.push({ id: `demo-inc-${iid++}`, couple_id: 'demo-couple', date: `${mk}-01`, source: 'salaire', description: 'Salaire', amount: round2(2350 + rand(-60, 60)), person: 'a' });
+    incomeEntries.push({ id: `demo-inc-${iid++}`, couple_id: 'demo-couple', date: `${mk}-01`, source: 'salaire', description: 'Salaire', amount: round2(1680 + rand(-40, 40)), person: 'b' });
+    if (monthsAgo === 4) incomeEntries.push({ id: `demo-inc-${iid++}`, couple_id: 'demo-couple', date: `${mk}-15`, source: 'prime', description: 'Prime annuelle', amount: 400, person: 'a' });
+    if (monthsAgo === 2) incomeEntries.push({ id: `demo-inc-${iid++}`, couple_id: 'demo-couple', date: `${mk}-20`, source: 'freelance', description: 'Mission freelance', amount: 320, person: 'b' });
 
+    // Récurrentes.
     expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-03`, category_id: catId('Loyer'), description: 'Loyer + charges', amount: 950, paid_by: 'a', recurring_id: 'demo-rec-0' });
     expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-05`, category_id: catId('Abonnements'), description: 'Netflix + Spotify', amount: 24.98, paid_by: 'b', recurring_id: 'demo-rec-1' });
-    [4, 12, 19, 26].forEach((day, idx) => {
-      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-${pad2(day)}`, category_id: catId('Courses'), description: idx % 2 ? 'Supermarché' : 'Marché', amount: 45 + (idx * 7 % 40), paid_by: idx % 2 ? 'a' : 'b' });
-    });
-    expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-08`, category_id: catId('Transport'), description: "Plein d'essence", amount: 62, paid_by: 'a' });
-    expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-15`, category_id: catId('Restaurants'), description: 'Restaurant', amount: 58, paid_by: 'b' });
-    expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-21`, category_id: catId('Loisirs'), description: 'Cinéma', amount: 28, paid_by: 'a' });
-    if (monthsAgo % 2 === 0) {
-      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-17`, category_id: catId('Santé'), description: 'Pharmacie', amount: 18.4, paid_by: 'b' });
+
+    // Courses : 3 à 6 fois dans le mois, montants et payeur variables.
+    const courseCount = randInt(3, 6);
+    for (let i = 0; i < courseCount; i++) {
+      const day = randInt(2, 27);
+      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-${pad2(day)}`, category_id: catId('Courses'), description: pick(['Supermarché', 'Marché', 'Épicerie', 'Supermarché']), amount: round2(rand(22, 85)), paid_by: pick(['a', 'a', 'b']) });
+    }
+    // Transport : 1 à 2 fois.
+    for (let i = 0; i < randInt(1, 2); i++) {
+      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-${pad2(randInt(6, 24))}`, category_id: catId('Transport'), description: pick(["Plein d'essence", 'Ticket de métro', 'Parking']), amount: round2(rand(18, 75)), paid_by: 'a' });
+    }
+    // Restaurants : 1 à 3 fois.
+    for (let i = 0; i < randInt(1, 3); i++) {
+      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-${pad2(randInt(3, 28))}`, category_id: catId('Restaurants'), description: pick(['Restaurant', 'Livraison', 'Brunch']), amount: round2(rand(22, 70)), paid_by: pick(['a', 'b']) });
+    }
+    // Loisirs : 0 à 2 fois.
+    for (let i = 0; i < randInt(0, 2); i++) {
+      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-${pad2(randInt(5, 26))}`, category_id: catId('Loisirs'), description: pick(['Cinéma', 'Concert', 'Abonnement sport']), amount: round2(rand(15, 55)), paid_by: pick(['a', 'b']) });
+    }
+    // Santé : occasionnel.
+    if (Math.random() < 0.55) {
+      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-${pad2(randInt(4, 24))}`, category_id: catId('Santé'), description: pick(['Pharmacie', 'Médecin', 'Dentiste']), amount: round2(rand(12, 60)), paid_by: pick(['a', 'b']) });
+    }
+    // Un ponctuel plus gros, un mois sur deux environ.
+    if (monthsAgo !== 5 && Math.random() < 0.65) {
+      const oo = oneOffs[oneOffIdx++ % oneOffs.length];
+      expenses.push({ id: `demo-exp-${eid++}`, couple_id: 'demo-couple', date: `${mk}-${pad2(oo.day)}`, category_id: catId(oo.cat), description: oo.label, amount: oo.amount, paid_by: pick(['a', 'b']) });
+    }
+
+    // Versements ponctuels de rééquilibrage, deux fois sur la période.
+    if (monthsAgo === 3 || monthsAgo === 1) {
+      settlements.push({ id: `demo-settle-${sid++}`, couple_id: 'demo-couple', date: `${mk}-27`, amount: randInt(60, 160), debtor: pick(['a', 'b']), creditor: null, note: 'Rééquilibrage' });
     }
   }
+  // Le créditeur de chaque versement est simplement l'autre personne que le débiteur.
+  settlements.forEach(s => { s.creditor = s.debtor === 'a' ? 'b' : 'a'; });
 
   store.expenses = expenses.sort((a, b) => b.date.localeCompare(a.date));
   store.incomeEntries = incomeEntries.sort((a, b) => b.date.localeCompare(a.date));
-
-  const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 27);
-  store.settlements = [
-    { id: 'demo-settle-0', couple_id: 'demo-couple', date: `${lastMonth.getFullYear()}-${pad2(lastMonth.getMonth() + 1)}-27`, amount: 120, debtor: 'b', creditor: 'a', note: 'Rééquilibrage' },
-  ];
+  store.settlements = settlements.sort((a, b) => b.date.localeCompare(a.date));
 
   store.recurring = [
     { id: 'demo-rec-0', couple_id: 'demo-couple', description: 'Loyer + charges', category_id: catId('Loyer'), amount: 950, paid_by: 'a', day_of_month: 3, active: true, start_month: `${today.getFullYear()}-01-01` },
