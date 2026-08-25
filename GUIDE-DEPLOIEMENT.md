@@ -1,8 +1,8 @@
 # Ensemble — guide de déploiement
 
-Ce dossier contient la vraie version d'Ensemble : une appli web installable (PWA), synchronisée en temps réel entre vos deux téléphones, avec un vrai compte pour chacun de vous. Pas de build, pas de serveur à gérer — juste des fichiers statiques + Supabase (base de données + authentification) + Vercel (hébergement).
+Ce dossier contient la vraie version d'Ensemble : une appli web installable (PWA), synchronisée en temps réel entre vos deux téléphones, avec un vrai compte pour chacun de vous. Pas de build, pas de serveur à gérer — juste des fichiers statiques + Supabase (base de données + authentification) + GitHub Pages (hébergement, gratuit et illimité).
 
-Compter environ 15-20 minutes, aucune compétence technique particulière requise au-delà de copier-coller.
+Compter environ 20-25 minutes, aucune compétence technique particulière requise au-delà de copier-coller.
 
 ## 1. Créer le projet Supabase (la base de données)
 
@@ -11,24 +11,22 @@ Compter environ 15-20 minutes, aucune compétence technique particulière requis
 3. Attends 1-2 minutes que le projet soit prêt.
 4. Dans le menu de gauche, ouvre **SQL Editor** → **New query**.
 5. Ouvre le fichier `schema.sql` fourni dans ce dossier, copie tout son contenu, colle-le dans l'éditeur SQL, puis clique **Run**. Ça crée toutes les tables, les règles de sécurité (chacun ne voit que les données de son couple) et les fonctions nécessaires. Tu ne devrais voir aucune erreur.
-6. Dans le menu de gauche, va dans **Project Settings** (icône engrenage) → **API**. Note deux valeurs :
+6. Dans le menu de gauche, va dans **Project Settings** (icône engrenage) → **API Keys**. Note deux valeurs :
    - **Project URL** (ressemble à `https://xxxxxxxxxxxx.supabase.co`)
    - **anon public key** (une longue chaîne de caractères)
 
    Ces deux valeurs sont faites pour être publiques (elles sont visibles dans le code de n'importe quelle appli Supabase) — la vraie sécurité vient des règles qu'on vient d'installer avec `schema.sql`, qui empêchent quiconque de voir les données d'un autre couple.
 
-7. Toujours dans **Project Settings**, va dans **Authentication** → **URL Configuration**, et renseigne (tu y reviendras à l'étape 3 une fois que tu auras l'adresse de ton site Vercel) :
-   - **Site URL** : ton URL Vercel (ex. `https://ensemble-xxxx.vercel.app`)
-   - **Redirect URLs** : ajoute la même URL
+   Sur cette même page, il existe aussi une clé **`service_role` / secret** (commence par `sb_secret_...`). Contrairement à la précédente, celle-ci donne un accès total à la base, sans restriction — ne jamais la mettre dans le code de l'appli ni dans un dépôt public. Elle ne sert que pour deux choses avancées : la sauvegarde automatique (étape 6) et le dépannage ponctuel d'un compte via l'API admin (voir Notes techniques).
 
-   C'est cette étape qui permet au lien de connexion reçu par email de vous ramener correctement dans l'appli.
-
-> **Optionnel — pour plus tard.** Par défaut, Supabase envoie les emails de connexion via son propre service, avec un lien cliquable classique. Ça fonctionne très bien tant que vous ouvrez ce lien dans Safari/Chrome directement (voir l'encadré à l'étape 4). Si un jour tu veux une expérience "icône plein écran sur l'écran d'accueil" plus poussée (avec connexion par code à taper plutôt qu'un lien), il faudra configurer un service d'email personnalisé (SMTP) — demande-moi à ce moment-là, c'est un chantier à part qu'on peut faire plus tard sans bloquer le reste.
+7. Toujours dans **Authentication**, deux réglages à faire :
+   - **URL Configuration** : renseigne le **Site URL** et ajoute la même adresse dans **Redirect URLs**. Tu n'auras l'URL définitive qu'après l'étape 3 (déploiement GitHub Pages) — reviens ici à ce moment-là pour la renseigner. Sans ça, la connexion avec Google ne redirige pas au bon endroit (la connexion par mot de passe, elle, fonctionne même sans cette étape).
+   - **Providers** → **Email** : désactive **Confirm email**. Comme vous êtes un nombre restreint et connu de personnes à utiliser l'appli, ça évite d'avoir à confirmer un email à la création du compte — la connexion par mot de passe devient immédiate.
 
 ## 2. Configurer les clés dans le code
 
 1. Ouvre le fichier `js/config.js` dans ce dossier.
-2. Remplace les deux valeurs par celles notées à l'étape 1.6 :
+2. Remplace les deux valeurs par celles notées à l'étape 1.6 (la `anon public key`, pas la `service_role`) :
 
 ```js
 export const SUPABASE_URL = "https://xxxxxxxxxxxx.supabase.co";
@@ -37,38 +35,66 @@ export const SUPABASE_ANON_KEY = "eyJ...ta-vraie-clé...";
 
 3. Enregistre le fichier.
 
-## 3. Déployer sur Vercel
+## 3. Déployer sur GitHub Pages
 
-1. Va sur [vercel.com](https://vercel.com) et crée un compte gratuit (tu peux te connecter avec GitHub si tu en as un, ou par email).
-2. Le plus simple : mets ce dossier entier dans un dépôt GitHub (crée un nouveau repo, pousse les fichiers), puis dans Vercel clique **Add New → Project** et importe ce repo.
-   - Alternative sans GitHub : installe l'outil en ligne de commande Vercel (`npm i -g vercel`) et lance `vercel` puis `vercel --prod` depuis ce dossier.
-3. Dans les réglages du projet Vercel : **aucune configuration de build n'est nécessaire**. C'est un site 100% statique — laisse « Build Command » et « Output Directory » vides/par défaut (Vercel détecte un site statique automatiquement).
-4. Clique **Deploy**. Après une minute, tu obtiens une URL du type `https://ensemble-xxxx.vercel.app`.
-5. Si ce n'est pas déjà fait, retourne dans Supabase → **Authentication** → **URL Configuration** (étape 1.7) pour y mettre cette URL.
+1. Crée un dépôt GitHub (public — GitHub Pages gratuit l'exige pour un compte personnel) et pousse-y tout le contenu de ce dossier.
+2. Sur la page du dépôt : **Settings** → **Pages** (menu de gauche, section "Code and automation").
+3. Sous **Build and deployment**, source = **Deploy from a branch**, branche **main**, dossier **/ (root)**. Clique **Save**.
+4. Après une minute ou deux, l'URL de ton site apparaît en haut de cette même page, du type `https://ton-pseudo.github.io/nom-du-repo/`.
+5. Retourne dans Supabase → **Authentication** → **URL Configuration** (étape 1.7) pour y renseigner cette URL comme **Site URL**, et l'ajouter (avec `**` à la fin, ex. `https://ton-pseudo.github.io/nom-du-repo/**`) dans **Redirect URLs**.
 
-## 4. Premier lancement
+> **Pourquoi pas Vercel ?** Ça fonctionnerait tout aussi bien (le projet a d'ailleurs commencé sur Vercel) — GitHub Pages a simplement été choisi pour rester sur un seul service (le code est de toute façon sur GitHub) et éviter un compte supplémentaire. Seule différence technique : GitHub Pages sert le site dans un sous-dossier (`/nom-du-repo/`) plutôt qu'à la racine du domaine, ce qui demande des chemins de fichiers relatifs plutôt qu'absolus — c'est déjà pris en compte dans les fichiers fournis (`index.html`, `manifest.json`, `sw.js`, `js/auth.js`).
 
-1. Ouvre l'URL Vercel **dans Safari ou Chrome directement** (pas via une icône ajoutée à l'écran d'accueil — voir l'encadré ci-dessous) sur ton téléphone ou ton ordinateur.
-2. Entre ton email → tu reçois un lien de connexion (aucun mot de passe à retenir).
-3. Clique le lien reçu par email, sur le même appareil → tu es connecté·e.
-4. Choisis **Créer notre espace**, entre les deux prénoms → un code d'invitation à 8 caractères est généré (visible ensuite dans Réglages).
-5. Envoie ce code à ton/ta partenaire. De son côté : même URL, son propre email, puis **Rejoindre mon/ma partenaire** avec le code.
-6. Vous êtes maintenant tous les deux connectés au même espace, synchronisé en temps réel.
+## 4. Activer la connexion
 
-> **Pourquoi éviter l'icône sur l'écran d'accueil pour se connecter ?** Sur iPhone, une icône ajoutée à l'écran d'accueil a un espace de stockage complètement séparé de Safari. Cliquer le lien reçu dans l'email ouvre toujours Safari (jamais l'icône) — la connexion réussit dans Safari, mais l'icône, elle, ne le saura jamais et redemandera de se connecter. Tant que vous utilisez le site directement dans Safari/Chrome (par exemple via un signet), ce problème n'existe pas.
+L'appli propose deux façons de se connecter, aucune des deux ne dépend de l'envoi d'email par Supabase (qui est limité à quelques emails/heure sur le plan gratuit) :
 
-## 5. Un signet plutôt qu'une icône plein écran (pour l'instant)
+- **Email + mot de passe** : fonctionne directement, rien à configurer côté Supabase au-delà de l'étape 1.7 (désactiver "Confirm email"). Chacun choisit son mot de passe à la création de compte, et peut le changer ensuite depuis Réglages.
 
-Pour retrouver l'appli facilement sans retomber sur l'écran de connexion :
+- **Connexion avec Google** *(optionnel, mais plus confortable au quotidien)* :
+  1. Va sur [console.cloud.google.com](https://console.cloud.google.com/), crée un projet.
+  2. Menu **Google Auth Platform** → onglet **Branding** : renseigne un nom d'appli et un email de support.
+  3. Onglet **Audience** : type d'utilisateur **External**, garde le statut **Testing**, et ajoute dans **Test users** les adresses Gmail des personnes qui utiliseront l'appli (en mode Testing, seules ces adresses-là peuvent se connecter avec Google — pas besoin de publier l'app).
+  4. Onglet **Clients** → **Create Client** → type **Web application**. Renseigne :
+     - **Authorized JavaScript origins** : ton URL GitHub Pages, sans le sous-dossier (ex. `https://ton-pseudo.github.io`)
+     - **Authorized redirect URIs** : `https://xxxxxxxxxxxx.supabase.co/auth/v1/callback` (avec ton Project URL Supabase de l'étape 1.6)
+  5. Récupère le **Client ID** et le **Client Secret** générés.
+  6. Dans Supabase : **Authentication** → **Providers** → **Google** → active-le, colle le Client ID et le Client Secret → **Save**.
 
-- **iPhone (Safari)** : bouton Partager → « Ajouter aux favoris » (pas « Sur l'écran d'accueil »).
-- **Android (Chrome)** : menu ⋮ → « Ajouter à l'écran d'accueil » fonctionne en général bien mieux qu'sur iPhone (Chrome partage son stockage entre l'icône et le navigateur), mais en cas de souci, un signet classique marche aussi.
-- **Ordinateur** : bouton Partager"/étoile → favoris, comme n'importe quel site.
+  Note : lors de la connexion, Google affiche d'abord un écran mentionnant l'adresse `xxxxxxxxxxxx.supabase.co` avant l'écran de consentement avec le nom de l'appli — c'est normal, Supabase agit comme intermédiaire technique de l'authentification, ce même écran apparaît pour n'importe quelle appli construite sur Supabase.
 
-L'appli reste installable en PWA plein écran (`manifest.json` et `sw.js` sont déjà en place) si tu veux tenter l'expérience icône malgré tout — simplement, la reconnexion depuis l'icône butera sur le même problème tant qu'on n'aura pas mis en place la connexion par code (voir l'encadré optionnel à l'étape 1.8).
+## 5. Premier lancement
+
+1. Ouvre l'URL GitHub Pages sur ton téléphone ou ton ordinateur.
+2. Clique **Créer un compte**, entre ton email et un mot de passe (ou **Continuer avec Google**).
+3. Choisis **Créer notre espace**, entre les deux prénoms → un code d'invitation à 8 caractères est généré (visible ensuite dans Réglages).
+4. Envoie ce code à ton/ta partenaire. De son côté : même URL, son propre compte (email/mot de passe ou Google), puis **Rejoindre mon/ma partenaire** avec le code.
+5. Vous êtes maintenant tous les deux connectés au même espace, synchronisé en temps réel.
+
+## 6. Installer l'icône sur l'écran d'accueil
+
+Contrairement à l'ancienne version (lien de connexion par email), la connexion par mot de passe ou par Google se fait entièrement dans l'appli elle-même, sans jamais passer par une autre appli (Mail, etc.) — l'icône plein écran ajoutée à l'écran d'accueil fonctionne donc désormais normalement, y compris sur iPhone :
+
+- **iPhone (Safari)** : bouton Partager → « Sur l'écran d'accueil ».
+- **Android (Chrome)** : menu ⋮ → « Ajouter à l'écran d'accueil » ou bandeau d'installation automatique.
+- **Ordinateur (Chrome/Edge)** : icône d'installation dans la barre d'adresse.
+
+## 7. Automatisations gratuites déjà en place
+
+Deux GitHub Actions tournent automatiquement dans le dépôt (visibles dans l'onglet **Actions** du repo) :
+
+- **Keep Supabase Awake** (`.github/workflows/keep-alive.yml`) : ping le projet Supabase deux fois par semaine pour éviter la mise en pause automatique après 7 jours d'inactivité (limite du plan gratuit).
+- **Backup Supabase Data** : sauvegarde toutes les données (dépenses, catégories, etc.) chaque semaine dans un second dépôt GitHub **privé**, séparé de celui du code (le plan gratuit Supabase n'inclut pas de sauvegarde automatique). Nécessite un secret GitHub `SUPABASE_SECRET_KEY` (la clé `service_role` de l'étape 1.6) configuré dans **Settings → Secrets and variables → Actions** du dépôt de sauvegarde.
 
 ## Notes techniques (au cas où)
 
-- Pas de `npm install` ni d'étape de build : le fichier `js/supabase-client.js` charge la librairie Supabase directement depuis un CDN (`esm.sh`) au moment où le navigateur de l'utilisateur charge la page. C'est un choix délibéré pour garder le déploiement le plus simple possible (zéro configuration côté Vercel).
-- Pour mettre à jour l'appli plus tard : modifie les fichiers, repousse sur GitHub (ou relance `vercel --prod`) — Vercel redéploie automatiquement.
+- Pas de `npm install` ni d'étape de build : le fichier `js/supabase-client.js` charge la librairie Supabase directement depuis un CDN (`esm.sh`) au moment où le navigateur de l'utilisateur charge la page. C'est un choix délibéré pour garder le déploiement le plus simple possible (zéro configuration côté hébergement).
+- Pour mettre à jour l'appli plus tard : modifie les fichiers, `git push` — GitHub Pages redéploie automatiquement en 1-2 minutes. Le service worker (`sw.js`) va toujours chercher la dernière version en ligne en priorité (stratégie "réseau d'abord"), donc les mises à jour sont visibles immédiatement au rechargement, sans manipulation particulière.
 - Si tu casses quelque chose dans `schema.sql` en le rejouant : les `create table` échoueront si les tables existent déjà. Pour repartir de zéro, supprime les tables concernées depuis l'éditeur SQL avant de relancer le script (attention, ça efface les données).
+- **Dépannage compte** : si un compte existe déjà côté Supabase sans mot de passe utilisable (par exemple après une migration depuis une ancienne version de l'appli), on peut lui en fixer un directement via l'API admin de Supabase, sans email, avec la clé `service_role` :
+
+  ```powershell
+  curl.exe -X PUT "https://xxxxxxxxxxxx.supabase.co/auth/v1/admin/users/<USER_UID>" -H "apikey: <SERVICE_ROLE_KEY>" -H "Authorization: Bearer <SERVICE_ROLE_KEY>" -H "Content-Type: application/json" -d '{\"password\":\"<NOUVEAU_MOT_DE_PASSE>\"}'
+  ```
+
+  Le `<USER_UID>` se trouve dans Supabase → **Authentication** → **Users**, en cliquant sur la ligne de la personne concernée.
