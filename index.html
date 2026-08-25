@@ -34,7 +34,7 @@
   .landing-hero h1{font-size:34px;font-weight:800;margin:0 0 12px;letter-spacing:-0.02em;}
   .landing-tagline{font-size:16px;color:var(--text-secondary);max-width:480px;margin:0 auto 12px;line-height:1.5;font-weight:600;}
   .landing-sub{font-size:14px;color:var(--text-secondary);max-width:440px;margin:0 auto 28px;line-height:1.6;}
-  .landing-cta-row{display:flex;flex-direction:column;align-items:center;gap:16px;}
+  .landing-cta-row{display:flex;flex-direction:row;flex-wrap:wrap;align-items:center;justify-content:center;gap:14px;}
   .landing-btn{
     display:inline-block;border:none;background:var(--accent);color:#fff;
     padding:14px 32px;border-radius:14px;font-size:15px;font-weight:700;
@@ -43,11 +43,19 @@
   .landing-secondary-link{color:var(--text-secondary);font-size:13.5px;font-weight:600;text-decoration:none;}
   .landing-secondary-link:hover{color:var(--accent);}
 
-  .landing-features{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:44px;}
+  .landing-features{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:24px;}
   .landing-feature{background:var(--surface-1);border:1px solid var(--border);border-radius:16px;padding:18px;}
   .landing-feature-ic{font-size:22px;margin-bottom:8px;}
   .landing-feature-title{font-size:14px;font-weight:700;margin-bottom:4px;}
   .landing-feature-desc{font-size:12.5px;color:var(--text-secondary);line-height:1.5;}
+
+  .landing-highlight{background:var(--surface-1);border:1px solid var(--border);border-radius:20px;padding:26px 22px;margin-bottom:24px;position:relative;overflow:hidden;}
+  .landing-highlight::before{content:"";position:absolute;top:0;left:0;bottom:0;width:4px;background:var(--accent);}
+  .landing-highlight-badge{display:inline-block;background:var(--accent);color:#fff;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.04em;padding:4px 10px;border-radius:999px;margin-bottom:12px;}
+  .landing-highlight-title{font-size:19px;font-weight:800;margin:0 0 8px;}
+  .landing-highlight-desc{font-size:13.5px;color:var(--text-secondary);line-height:1.6;margin:0 0 14px;}
+  .landing-highlight-example{font-size:12.5px;color:var(--text-secondary);line-height:1.6;background:var(--page);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin:0;}
+  .landing-highlight-example strong{color:var(--text-primary);}
 
   .landing-tech{background:var(--surface-1);border:1px solid var(--border);border-radius:20px;padding:26px 22px;margin-bottom:40px;}
   .landing-tech-title{font-size:17px;font-weight:800;margin-bottom:6px;}
@@ -61,7 +69,6 @@
 
   @media (min-width:700px){
     .landing-hero h1{font-size:44px;}
-    .landing-cta-row{flex-direction:row;justify-content:center;}
     .landing-features{grid-template-columns:repeat(3,1fr);}
   }
 </style>
@@ -78,7 +85,7 @@
       <p class="landing-sub">Chacun ajoute ses dépenses et revenus, l'appli calcule automatiquement qui doit quoi à l'autre, selon la répartition que vous choisissez.</p>
       <div class="landing-cta-row">
         <a class="landing-btn" href="app/demo.html">Voir la démo</a>
-        <a class="landing-secondary-link" href="app/">Se connecter</a>
+        <a class="landing-btn" href="app/">Créer mon compte</a>
       </div>
       <a class="landing-secondary-link" style="display:inline-block;margin-top:14px;" href="https://github.com/remydutto/ensemble-app" target="_blank" rel="noopener">Voir le code sur GitHub ↗</a>
     </section>
@@ -92,7 +99,7 @@
       <div class="landing-feature">
         <div class="landing-feature-ic">⚖️</div>
         <div class="landing-feature-title">Répartition équitable</div>
-        <div class="landing-feature-desc">50/50, au prorata des revenus, ou sur mesure — le calcul de qui doit quoi se fait tout seul.</div>
+        <div class="landing-feature-desc">50/50, au prorata du mois, ou en prorata cumulé — notre approche maison. Le calcul de qui doit quoi se fait tout seul.</div>
       </div>
       <div class="landing-feature">
         <div class="landing-feature-ic">🔁</div>
@@ -116,6 +123,13 @@
       </div>
     </section>
 
+    <section class="landing-highlight">
+      <div class="landing-highlight-badge">Notre calcul signature</div>
+      <div class="landing-highlight-title">Le prorata cumulé</div>
+      <p class="landing-highlight-desc">La plupart des applis de dépenses partagées recalculent la part de chacun sur les seuls revenus du mois — une prime, un mois creux en freelance, et l'équilibre part en vrille. Ensemble calcule la part équitable de chacun sur l'ensemble des revenus cumulés depuis le tout premier mois. Le partage reste juste sur la durée, sans à-coups d'un mois à l'autre.</p>
+      <p class="landing-highlight-example">Par exemple : une prime ponctuelle de 400€ pour l'un des deux ne fait pas exploser sa part du loyer ce mois-là — elle est <strong>lissée sur l'historique complet des revenus</strong>, comme dans la vraie vie d'un couple.</p>
+    </section>
+
     <section class="landing-tech">
       <div class="landing-tech-title">Sous le capot</div>
       <p class="landing-tech-sub">Un projet personnel pensé pour être simple à faire tourner et à maintenir, sans jamais dépendre d'un service payant.</p>
@@ -130,7 +144,7 @@
     <footer class="landing-footer">
       <div class="landing-cta-row">
         <a class="landing-btn" href="app/demo.html">Voir la démo</a>
-        <a class="landing-secondary-link" href="app/">Se connecter</a>
+        <a class="landing-btn" href="app/">Créer mon compte</a>
       </div>
       <div class="landing-credit">Conçu et développé par Rémy.</div>
     </footer>
