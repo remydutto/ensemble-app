@@ -7,18 +7,18 @@
 // ============================================================================
 const CACHE_NAME = "ensemble-shell-v2";
 const APP_SHELL = [
-  "/",
-  "/index.html",
-  "/style.css",
-  "/manifest.json",
-  "/icon-192.png",
-  "/icon-512.png",
-  "/js/app.js",
-  "/js/store.js",
-  "/js/calc.js",
-  "/js/auth.js",
-  "/js/config.js",
-  "/js/supabase-client.js",
+  "./",
+  "index.html",
+  "style.css",
+  "manifest.json",
+  "icon-192.png",
+  "icon-512.png",
+  "js/app.js",
+  "js/store.js",
+  "js/calc.js",
+  "js/auth.js",
+  "js/config.js",
+  "js/supabase-client.js",
 ];
 
 self.addEventListener("install", (event) => {
