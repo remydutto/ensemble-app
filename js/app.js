@@ -866,17 +866,42 @@ document.getElementById('signOutBtn').addEventListener('click', async ()=>{
   window.location.reload();
 });
 
-document.getElementById('changePasswordBtn').addEventListener('click', async ()=>{
-  const pwd = document.getElementById('newPassword').value;
-  const errEl = document.getElementById('passwordChangeError');
-  const okEl = document.getElementById('passwordChangeSuccess');
+const passwordModalBackdrop = document.getElementById('passwordModalBackdrop');
+function openPasswordModal(){
+  document.getElementById('newPasswordInput').value = '';
+  document.getElementById('confirmPasswordInput').value = '';
+  document.getElementById('passwordModalError').style.display = 'none';
+  document.getElementById('passwordModalSuccess').style.display = 'none';
+  document.getElementById('submitPasswordChange').style.display = 'block';
+  document.getElementById('cancelPasswordChange').style.display = 'block';
+  passwordModalBackdrop.classList.add('active');
+}
+function closePasswordModal(){ passwordModalBackdrop.classList.remove('active'); }
+document.getElementById('openPasswordModalBtn').addEventListener('click', openPasswordModal);
+document.getElementById('cancelPasswordChange').addEventListener('click', closePasswordModal);
+passwordModalBackdrop.addEventListener('click', (e)=>{ if(e.target===passwordModalBackdrop) closePasswordModal(); });
+
+document.getElementById('submitPasswordChange').addEventListener('click', async ()=>{
+  const pwd = document.getElementById('newPasswordInput').value;
+  const confirmPwd = document.getElementById('confirmPasswordInput').value;
+  const errEl = document.getElementById('passwordModalError');
+  const okEl = document.getElementById('passwordModalSuccess');
   errEl.style.display = 'none';
   okEl.style.display = 'none';
   if(!pwd || pwd.length < 6){ errEl.textContent = "Le mot de passe doit faire au moins 6 caractères."; errEl.style.display = 'block'; return; }
+  if(pwd !== confirmPwd){ errEl.textContent = "Les deux mots de passe ne correspondent pas."; errEl.style.display = 'block'; return; }
   try{
     await auth.updatePassword(pwd);
-    document.getElementById('newPassword').value = '';
     okEl.style.display = 'block';
+    // On masque les boutons et on déconnecte après un court délai, pour que la
+    // personne voie bien la confirmation avant de devoir se reconnecter avec
+    // le nouveau mot de passe (ça confirme aussi qu'il a bien été enregistré).
+    document.getElementById('submitPasswordChange').style.display = 'none';
+    document.getElementById('cancelPasswordChange').style.display = 'none';
+    setTimeout(async ()=>{
+      await auth.signOut();
+      window.location.reload();
+    }, 1800);
   } catch(err){ errEl.textContent = err.message; errEl.style.display = 'block'; }
 });
 

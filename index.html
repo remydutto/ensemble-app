@@ -208,12 +208,8 @@
 
       <div class="card">
         <div style="font-size:13px;font-weight:700;margin-bottom:6px;">Mot de passe</div>
-        <div class="secondary small" style="margin-top:2px;margin-bottom:4px;">Change le mot de passe utilisé pour te connecter à l'appli.</div>
-        <label class="field-label">Nouveau mot de passe</label>
-        <input type="password" id="newPassword" placeholder="••••••••" autocomplete="new-password">
-        <button class="submit-btn" id="changePasswordBtn" type="button" style="margin-top:12px;">Mettre à jour le mot de passe</button>
-        <div class="auth-error" id="passwordChangeError" style="display:none;"></div>
-        <div class="form-success" id="passwordChangeSuccess" style="display:none;">Mot de passe mis à jour !</div>
+        <div class="secondary small" style="margin-top:2px;margin-bottom:10px;">Change le mot de passe utilisé pour te connecter à l'appli.</div>
+        <button class="submit-btn" id="openPasswordModalBtn" type="button" style="margin-top:0;">Changer le mot de passe</button>
       </div>
 
       <div class="card" style="text-align:center;">
@@ -322,6 +318,25 @@
       <button class="confirm-cancel" id="reassignCancelBtn" type="button">Annuler</button>
       <button class="confirm-ok danger" id="reassignOkBtn" type="button">Déplacer et supprimer</button>
     </div>
+  </div>
+</div>
+
+<!-- CHANGE PASSWORD MODAL -->
+<div class="modal-backdrop center-modal-backdrop" id="passwordModalBackdrop">
+  <div class="modal">
+    <div class="modal-title">Changer le mot de passe</div>
+
+    <label class="field-label">Nouveau mot de passe</label>
+    <input type="password" id="newPasswordInput" placeholder="••••••••" autocomplete="new-password">
+
+    <label class="field-label">Confirme le mot de passe</label>
+    <input type="password" id="confirmPasswordInput" placeholder="••••••••" autocomplete="new-password">
+
+    <div class="auth-error" id="passwordModalError" style="display:none;"></div>
+    <div class="form-success" id="passwordModalSuccess" style="display:none;">Mot de passe mis à jour ! Reconnecte-toi avec le nouveau...</div>
+
+    <button class="submit-btn" id="submitPasswordChange" type="button">Valider</button>
+    <button class="cancel-btn" id="cancelPasswordChange" type="button">Annuler</button>
   </div>
 </div>
 
