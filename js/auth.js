@@ -24,7 +24,11 @@ export function onAuthChange(cb) {
 export async function signInWithEmail(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    options: { emailRedirectTo: window.location.origin },
+    // On utilise le dossier de la page actuelle (et pas juste window.location.origin)
+    // car sur GitHub Pages l'appli n'est pas à la racine du domaine mais dans un
+    // sous-dossier (ex. https://xxx.github.io/ensemble-app/) : origin seul renverrait
+    // le lien vers la racine du domaine, en dehors de l'appli.
+    options: { emailRedirectTo: new URL('.', window.location.href).href },
   });
   if (error) throw error;
 }
