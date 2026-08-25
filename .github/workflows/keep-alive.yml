@@ -1,0 +1,32 @@
+name: Keep Supabase Awake
+ 
+on:
+  schedule:
+    - cron: '0 8 * * 1,4'   # lundi et jeudi à 8h UTC
+  workflow_dispatch:         # bouton "Run workflow" manuel dans l'onglet Actions
+ 
+permissions:
+  contents: write            # nécessaire pour que le workflow puisse committer
+ 
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Récupérer le dépôt
+        uses: actions/checkout@v4
+ 
+      - name: Ping Supabase
+        run: |
+          curl -s -o /dev/null -w "Statut : %{http_code}\n" \
+            "https://wjuzffsdmytluztgegcg.supabase.co/rest/v1/couples?select=id&limit=1" \
+            -H "apikey: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdXpmZnNkbXl0bHV6dGdlZ2NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMDY4MjUsImV4cCI6MjEwMjc4MjgyNX0.mxJtxD_bzFRTsg2ZFjqy64vJ3J34Q4_-YGNWmd-ZRCg" \
+            -H "Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6IndqdXpmZnNkbXl0bHV6dGdlZ2NnIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODcyMDY4MjUsImV4cCI6MjEwMjc4MjgyNX0.mxJtxD_bzFRTsg2ZFjqy64vJ3J34Q4_-YGNWmd-ZRCg"
+ 
+      - name: Enregistrer un repère (empêche la désactivation du workflow après 60 jours d'inactivité du dépôt)
+        run: |
+          git config user.name "keep-alive-bot"
+          git config user.email "actions@github.com"
+          echo "Dernier ping : $(date -u)" > .github/last-ping.txt
+          git add .github/last-ping.txt
+          git commit -m "chore: ping automatique (garde Supabase et ce workflow actifs)"
+          git push
