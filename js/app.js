@@ -1392,10 +1392,10 @@ function showToast(msg){
    PORTE D'ENTRÉE : auth + création/rejoint du couple
    ============================================================================ */
 let inviteCodeCache = null;
+let authMode = 'signin'; // 'signin' ou 'signup'
 
 function showAuthStep(step){
   document.getElementById('authStepSignin').style.display = step==='signin' ? 'block':'none';
-  document.getElementById('authStepCheckEmail').style.display = step==='checkEmail' ? 'block':'none';
   document.getElementById('authStepOnboarding').style.display = step==='onboarding' ? 'block':'none';
 }
 function showAuthError(msg){
@@ -1405,17 +1405,43 @@ function showAuthError(msg){
   el.style.display = 'block';
 }
 
-document.getElementById('authSendLink').addEventListener('click', async ()=>{
+function setAuthMode(mode){
+  authMode = mode;
+  const isSignup = mode === 'signup';
+  document.getElementById('authModeTitle').textContent = isSignup ? 'Crée ton compte' : 'Connecte-toi';
+  document.getElementById('authModeSub').textContent = isSignup
+    ? "Choisis un mot de passe (au moins 6 caractères) pour ton compte."
+    : "Avec ton email et ton mot de passe, ou en un clic avec Google.";
+  document.getElementById('authSubmit').textContent = isSignup ? 'Créer mon compte' : 'Se connecter';
+  document.getElementById('authSwitchMode').textContent = isSignup
+    ? "Déjà un compte ? Se connecter"
+    : "Pas encore de compte ? Créer un compte";
+  showAuthError(null);
+}
+
+document.getElementById('authSubmit').addEventListener('click', async ()=>{
   const email = document.getElementById('authEmail').value.trim();
-  if(!email){ showAuthError("Indique ton email."); return; }
+  const password = document.getElementById('authPassword').value;
+  if(!email || !password){ showAuthError("Indique ton email et ton mot de passe."); return; }
+  if(authMode === 'signup' && password.length < 6){ showAuthError("Le mot de passe doit faire au moins 6 caractères."); return; }
   try{
     showAuthError(null);
-    await auth.signInWithEmail(email);
-    document.getElementById('authSentTo').textContent = email;
-    showAuthStep('checkEmail');
+    if(authMode === 'signup'){
+      await auth.signUpWithPassword(email, password);
+    } else {
+      await auth.signInWithPassword(email, password);
+    }
   } catch(err){ showAuthError(err.message); }
 });
-document.getElementById('authBackToSignin').addEventListener('click', ()=>showAuthStep('signin'));
+document.getElementById('authSwitchMode').addEventListener('click', ()=>{
+  setAuthMode(authMode === 'signup' ? 'signin' : 'signup');
+});
+document.getElementById('authGoogle').addEventListener('click', async ()=>{
+  try{
+    showAuthError(null);
+    await auth.signInWithGoogle();
+  } catch(err){ showAuthError(err.message); }
+});
 
 document.getElementById('obChooseCreate').addEventListener('click', ()=>{
   document.querySelectorAll('.onboard-choice .mode-option').forEach(b=>b.classList.remove('selected'));

@@ -1,13 +1,12 @@
 // ============================================================================
-// Authentification (lien magique par email) + création/rejoint d'un couple.
+// Authentification : email + mot de passe, ou connexion avec Google.
 //
-// À utiliser dans Safari/Chrome directement (pas via une icône ajoutée à l'écran
-// d'accueil) : sur iPhone, une icône installée a un stockage complètement séparé
-// de Safari, donc cliquer le lien reçu dans Mail (qui s'ouvre dans Safari) ne peut
-// jamais établir de session dans l'icône. `verifyOtp` ci-dessous reste disponible
-// si on veut un jour passer à un code à 6 chiffres tapé dans l'appli (ce qui
-// contournerait ce problème) — non branché à l'UI pour l'instant, car ça demande
-// de configurer un SMTP personnalisé côté Supabase pour personnaliser l'email.
+// On n'utilise plus le lien magique par email en usage courant : le mailer
+// gratuit de Supabase est plafonné à quelques emails par heure pour tout le
+// projet, ce qui bloquait les connexions dès qu'on le testait un peu. Le mot
+// de passe et Google ne dépendent d'aucun email envoyé par Supabase, donc
+// aucune limite. `signInWithEmail`/`verifyOtp` restent dispo plus bas si on
+// veut un jour un mode "lien reçu par email" en plus (ex. mot de passe oublié).
 // ============================================================================
 import { supabase } from './supabase-client.js';
 
@@ -21,13 +20,32 @@ export function onAuthChange(cb) {
   supabase.auth.onAuthStateChange((_event, session) => cb(session));
 }
 
+export async function signInWithPassword(email, password) {
+  const { error } = await supabase.auth.signInWithPassword({ email, password });
+  if (error) throw error;
+}
+
+export async function signUpWithPassword(email, password) {
+  const { error } = await supabase.auth.signUp({ email, password });
+  if (error) throw error;
+}
+
+export async function signInWithGoogle() {
+  const { error } = await supabase.auth.signInWithOAuth({
+    provider: 'google',
+    // Même remarque que pour le lien magique : on redirige vers le dossier de
+    // la page actuelle (et pas window.location.origin) car sur GitHub Pages
+    // l'appli est dans un sous-dossier (ex. https://xxx.github.io/ensemble-app/).
+    options: { redirectTo: new URL('.', window.location.href).href },
+  });
+  if (error) throw error;
+}
+
+// Lien magique par email — plus utilisé dans l'UI actuelle (voir note en haut
+// de fichier), gardé au cas où on veuille le réintroduire pour un usage ponctuel.
 export async function signInWithEmail(email) {
   const { error } = await supabase.auth.signInWithOtp({
     email,
-    // On utilise le dossier de la page actuelle (et pas juste window.location.origin)
-    // car sur GitHub Pages l'appli n'est pas à la racine du domaine mais dans un
-    // sous-dossier (ex. https://xxx.github.io/ensemble-app/) : origin seul renverrait
-    // le lien vers la racine du domaine, en dehors de l'appli.
     options: { emailRedirectTo: new URL('.', window.location.href).href },
   });
   if (error) throw error;
