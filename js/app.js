@@ -866,6 +866,20 @@ document.getElementById('signOutBtn').addEventListener('click', async ()=>{
   window.location.reload();
 });
 
+document.getElementById('changePasswordBtn').addEventListener('click', async ()=>{
+  const pwd = document.getElementById('newPassword').value;
+  const errEl = document.getElementById('passwordChangeError');
+  const okEl = document.getElementById('passwordChangeSuccess');
+  errEl.style.display = 'none';
+  okEl.style.display = 'none';
+  if(!pwd || pwd.length < 6){ errEl.textContent = "Le mot de passe doit faire au moins 6 caractères."; errEl.style.display = 'block'; return; }
+  try{
+    await auth.updatePassword(pwd);
+    document.getElementById('newPassword').value = '';
+    okEl.style.display = 'block';
+  } catch(err){ errEl.textContent = err.message; errEl.style.display = 'block'; }
+});
+
 /* ============================================================================
    CATÉGORIES : grille de choix réutilisable
    ============================================================================ */

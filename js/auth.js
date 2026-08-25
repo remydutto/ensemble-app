@@ -63,6 +63,13 @@ export async function signOut() {
   await supabase.auth.signOut();
 }
 
+// Change le mot de passe du compte connecté — nécessite une session active
+// (donc d'être déjà connecté), pas d'email envoyé, aucune limite.
+export async function updatePassword(newPassword) {
+  const { error } = await supabase.auth.updateUser({ password: newPassword });
+  if (error) throw error;
+}
+
 // Retourne { coupleId, role } si l'utilisateur connecté appartient déjà à un couple, sinon null.
 export async function getMyCouple() {
   const { data: { user } } = await supabase.auth.getUser();
