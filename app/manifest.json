@@ -1,0 +1,17 @@
+{
+  "name": "Ensemble — dépenses de couple",
+  "short_name": "Ensemble",
+  "description": "Suivez vos dépenses, revenus et l'équilibre financier de votre couple, à deux, en temps réel.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#f5f7fb",
+  "theme_color": "#2a78d6",
+  "lang": "fr",
+  "icons": [
+    { "src": "icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
