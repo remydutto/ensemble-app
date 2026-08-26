@@ -1,6 +1,13 @@
 # Ensemble — guide de déploiement
 
-Ce dossier contient la vraie version d'Ensemble : une appli web installable (PWA), synchronisée en temps réel entre vos deux téléphones, avec un vrai compte pour chacun de vous. Pas de build, pas de serveur à gérer — juste des fichiers statiques + Supabase (base de données + authentification) + GitHub Pages (hébergement, gratuit et illimité).
+Ce dossier contient Ensemble : une appli web installable (PWA), synchronisée en temps réel entre vos deux téléphones, avec un vrai compte pour chacun de vous. Pas de build, pas de serveur à gérer — juste des fichiers statiques + Supabase (base de données + authentification) + GitHub Pages (hébergement, gratuit et illimité).
+
+Le dépôt est organisé en deux parties bien séparées :
+
+- **`index.html`** (à la racine) : une page d'accueil publique et purement statique (présentation, démo, boutons de connexion) — visible par tout le monde, sans aucune dépendance à Supabase.
+- **`app/`** : l'appli réelle (authentification, dépenses, réglages...), ainsi que `app/demo.html`, une version de démonstration publique avec des données fictives, sans compte ni configuration nécessaire.
+
+Toute la configuration ci-dessous (clés Supabase, Google OAuth) ne concerne que le dossier `app/` — la page d'accueil et la démo n'ont besoin de rien.
 
 Compter environ 20-25 minutes, aucune compétence technique particulière requise au-delà de copier-coller.
 
@@ -25,7 +32,7 @@ Compter environ 20-25 minutes, aucune compétence technique particulière requis
 
 ## 2. Configurer les clés dans le code
 
-1. Ouvre le fichier `js/config.js` dans ce dossier.
+1. Ouvre le fichier `app/js/config.js` dans ce dossier (bien dans le sous-dossier `app/`, pas à la racine).
 2. Remplace les deux valeurs par celles notées à l'étape 1.6 (la `anon public key`, pas la `service_role`) :
 
 ```js
@@ -40,10 +47,10 @@ export const SUPABASE_ANON_KEY = "eyJ...ta-vraie-clé...";
 1. Crée un dépôt GitHub (public — GitHub Pages gratuit l'exige pour un compte personnel) et pousse-y tout le contenu de ce dossier.
 2. Sur la page du dépôt : **Settings** → **Pages** (menu de gauche, section "Code and automation").
 3. Sous **Build and deployment**, source = **Deploy from a branch**, branche **main**, dossier **/ (root)**. Clique **Save**.
-4. Après une minute ou deux, l'URL de ton site apparaît en haut de cette même page, du type `https://ton-pseudo.github.io/nom-du-repo/`.
-5. Retourne dans Supabase → **Authentication** → **URL Configuration** (étape 1.7) pour y renseigner cette URL comme **Site URL**, et l'ajouter (avec `**` à la fin, ex. `https://ton-pseudo.github.io/nom-du-repo/**`) dans **Redirect URLs**.
+4. Après une minute ou deux, l'URL de ton site apparaît en haut de cette même page, du type `https://ton-pseudo.github.io/nom-du-repo/`. C'est la page d'accueil publique. L'appli elle-même (connexion, dépenses...) est accessible juste en dessous, à `https://ton-pseudo.github.io/nom-du-repo/app/`.
+5. Retourne dans Supabase → **Authentication** → **URL Configuration** (étape 1.7) pour y renseigner l'URL de l'**appli** (avec `/app/` à la fin) comme **Site URL**, et ajouter l'URL du dépôt entière avec `**` à la fin (ex. `https://ton-pseudo.github.io/nom-du-repo/**`) dans **Redirect URLs**, pour couvrir à la fois la page d'accueil et l'appli.
 
-> **Pourquoi pas Vercel ?** Ça fonctionnerait tout aussi bien (le projet a d'ailleurs commencé sur Vercel) — GitHub Pages a simplement été choisi pour rester sur un seul service (le code est de toute façon sur GitHub) et éviter un compte supplémentaire. Seule différence technique : GitHub Pages sert le site dans un sous-dossier (`/nom-du-repo/`) plutôt qu'à la racine du domaine, ce qui demande des chemins de fichiers relatifs plutôt qu'absolus — c'est déjà pris en compte dans les fichiers fournis (`index.html`, `manifest.json`, `sw.js`, `js/auth.js`).
+> **Pourquoi pas Vercel ?** Ça fonctionnerait tout aussi bien (le projet a d'ailleurs commencé sur Vercel) — GitHub Pages a simplement été choisi pour rester sur un seul service (le code est de toute façon sur GitHub) et éviter un compte supplémentaire. Seule différence technique : GitHub Pages sert le site dans un sous-dossier (`/nom-du-repo/`) plutôt qu'à la racine du domaine, ce qui demande des chemins de fichiers relatifs plutôt qu'absolus — c'est déjà pris en compte dans les fichiers fournis (`app/index.html`, `app/manifest.json`, `app/sw.js`, `app/js/auth.js`).
 
 ## 4. Activer la connexion
 
@@ -65,11 +72,13 @@ L'appli propose deux façons de se connecter, aucune des deux ne dépend de l'en
 
 ## 5. Premier lancement
 
-1. Ouvre l'URL GitHub Pages sur ton téléphone ou ton ordinateur.
+1. Ouvre l'URL de l'**appli** (`.../app/`, pas la page d'accueil) sur ton téléphone ou ton ordinateur — ou clique sur **Créer mon compte** depuis la page d'accueil, qui y mène directement.
 2. Clique **Créer un compte**, entre ton email et un mot de passe (ou **Continuer avec Google**).
 3. Choisis **Créer notre espace**, entre les deux prénoms → un code d'invitation à 8 caractères est généré (visible ensuite dans Réglages).
 4. Envoie ce code à ton/ta partenaire. De son côté : même URL, son propre compte (email/mot de passe ou Google), puis **Rejoindre mon/ma partenaire** avec le code.
 5. Vous êtes maintenant tous les deux connectés au même espace, synchronisé en temps réel.
+
+Pour montrer l'appli à quelqu'un sans lui faire créer de compte, partage plutôt l'URL de la démo (`.../app/demo.html`, ou le bouton **Voir la démo** de la page d'accueil) : elle tourne avec des données fictives, sans toucher à Supabase, et rien n'y est jamais enregistré.
 
 ## 6. Installer l'icône sur l'écran d'accueil
 
@@ -88,8 +97,9 @@ Deux GitHub Actions tournent automatiquement dans le dépôt (visibles dans l'on
 
 ## Notes techniques (au cas où)
 
-- Pas de `npm install` ni d'étape de build : le fichier `js/supabase-client.js` charge la librairie Supabase directement depuis un CDN (`esm.sh`) au moment où le navigateur de l'utilisateur charge la page. C'est un choix délibéré pour garder le déploiement le plus simple possible (zéro configuration côté hébergement).
-- Pour mettre à jour l'appli plus tard : modifie les fichiers, `git push` — GitHub Pages redéploie automatiquement en 1-2 minutes. Le service worker (`sw.js`) va toujours chercher la dernière version en ligne en priorité (stratégie "réseau d'abord"), donc les mises à jour sont visibles immédiatement au rechargement, sans manipulation particulière.
+- Pas de `npm install` ni d'étape de build : le fichier `app/js/supabase-client.js` charge la librairie Supabase directement depuis un CDN (`esm.sh`) au moment où le navigateur de l'utilisateur charge la page. C'est un choix délibéré pour garder le déploiement le plus simple possible (zéro configuration côté hébergement).
+- Pour mettre à jour l'appli plus tard : modifie les fichiers, `git push` — GitHub Pages redéploie automatiquement en 1-2 minutes. Le service worker (`app/sw.js`, actif uniquement dans le dossier `app/`) va toujours chercher la dernière version en ligne en priorité (stratégie "réseau d'abord"), donc les mises à jour sont visibles immédiatement au rechargement, sans manipulation particulière. La page d'accueil à la racine n'a pas de service worker : un simple rechargement suffit toujours à en voir la dernière version.
+- **Démo publique** (`app/demo.html`) : ce n'est pas un fichier séparé à maintenir — elle réutilise tout le code de l'appli (`app/js/app.js`, `app/js/store.js`...). Un simple flag (`window.__ENSEMBLE_DEMO__`, posé dans `demo.html` avant de charger le script) fait basculer `store.js` sur des données fictives générées à la volée plutôt que sur Supabase, et bloque toute tentative d'écriture. Aucune configuration ni compte Supabase nécessaire pour qu'elle fonctionne.
 - Si tu casses quelque chose dans `schema.sql` en le rejouant : les `create table` échoueront si les tables existent déjà. Pour repartir de zéro, supprime les tables concernées depuis l'éditeur SQL avant de relancer le script (attention, ça efface les données).
 - **Dépannage compte** : si un compte existe déjà côté Supabase sans mot de passe utilisable (par exemple après une migration depuis une ancienne version de l'appli), on peut lui en fixer un directement via l'API admin de Supabase, sans email, avec la clé `service_role` :
 
