@@ -377,6 +377,45 @@ input:checked + .slider-tg::before{transform:translateX(18px);}
 .toast.show{opacity:1;transform:translate(-50%,-6px);}
 
 /* ---------------------------------------------------------------
+   Page d'accueil / vitrine.
+   --------------------------------------------------------------- */
+.landing{
+  min-height:100vh;width:100%;display:flex;justify-content:center;
+  background:var(--page);padding:48px 20px 64px;
+}
+.landing-inner{width:100%;max-width:760px;}
+.landing-hero{text-align:center;padding:12px 0 44px;}
+.landing-icon{border-radius:22px;box-shadow:var(--shadow);margin-bottom:20px;}
+.landing-hero h1{font-size:34px;font-weight:800;margin:0 0 12px;letter-spacing:-0.02em;}
+.landing-tagline{font-size:16px;color:var(--text-secondary);max-width:480px;margin:0 auto 12px;line-height:1.5;font-weight:600;}
+.landing-sub{font-size:14px;color:var(--text-secondary);max-width:440px;margin:0 auto 28px;line-height:1.6;}
+.landing-cta-row{display:flex;flex-direction:column;align-items:center;gap:16px;}
+.landing-secondary-link{color:var(--text-secondary);font-size:13.5px;font-weight:600;text-decoration:none;}
+.landing-secondary-link:hover{color:var(--accent);}
+
+.landing-features{display:grid;grid-template-columns:repeat(2,1fr);gap:14px;margin-bottom:44px;}
+.landing-feature{background:var(--surface-1);border:1px solid var(--border);border-radius:16px;padding:18px;}
+.landing-feature-ic{font-size:22px;margin-bottom:8px;}
+.landing-feature-title{font-size:14px;font-weight:700;margin-bottom:4px;}
+.landing-feature-desc{font-size:12.5px;color:var(--text-secondary);line-height:1.5;}
+
+.landing-tech{background:var(--surface-1);border:1px solid var(--border);border-radius:20px;padding:26px 22px;margin-bottom:40px;}
+.landing-tech-title{font-size:17px;font-weight:800;margin-bottom:6px;}
+.landing-tech-sub{font-size:13px;color:var(--text-secondary);margin:0 0 16px;line-height:1.5;}
+.landing-tech-list{margin:0;padding-left:18px;display:flex;flex-direction:column;gap:10px;}
+.landing-tech-list li{font-size:13px;color:var(--text-secondary);line-height:1.55;}
+.landing-tech-list li strong{color:var(--text-primary);}
+
+.landing-footer{text-align:center;padding-top:8px;}
+.landing-credit{margin-top:16px;font-size:12px;color:var(--muted);}
+
+@media (min-width:700px){
+  .landing-hero h1{font-size:44px;}
+  .landing-cta-row{flex-direction:row;justify-content:center;}
+  .landing-features{grid-template-columns:repeat(3,1fr);}
+}
+
+/* ---------------------------------------------------------------
    Porte d'entrée : connexion + création/rejoint du couple.
    --------------------------------------------------------------- */
 .authgate{

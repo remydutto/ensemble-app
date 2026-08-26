@@ -1437,6 +1437,15 @@ function showAuthStep(step){
   document.getElementById('authStepSignin').style.display = step==='signin' ? 'block':'none';
   document.getElementById('authStepOnboarding').style.display = step==='onboarding' ? 'block':'none';
 }
+// Masque la page d'accueil/vitrine et affiche la porte d'entrée (connexion) —
+// appelé au clic sur "Se connecter" depuis la vitrine, ou automatiquement si
+// une session existe déjà (retour direct, sans repasser par la vitrine).
+function showAuthGate(){
+  document.getElementById('landingPage').style.display = 'none';
+  document.getElementById('authGate').style.display = 'flex';
+}
+document.getElementById('landingCta').addEventListener('click', ()=>{ showAuthGate(); showAuthStep('signin'); });
+document.getElementById('landingCta2').addEventListener('click', ()=>{ showAuthGate(); showAuthStep('signin'); });
 function showAuthError(msg){
   const el = document.getElementById('authError');
   if(!msg){ el.style.display = 'none'; return; }
@@ -1530,7 +1539,10 @@ async function startApp(coupleId, role){
 async function boot(){
   try{
     const session = await auth.getSession();
-    if(!session){ showAuthStep('signin'); return; }
+    // Pas de session : on reste sur la vitrine, pas la peine de révéler la
+    // porte d'entrée tant que la personne n'a pas cliqué "Se connecter".
+    if(!session){ return; }
+    showAuthGate();
     const membership = await auth.getMyCouple();
     if(membership){
       await startApp(membership.coupleId, membership.role);
@@ -1538,6 +1550,7 @@ async function boot(){
       showAuthStep('onboarding');
     }
   } catch(err){
+    showAuthGate();
     showAuthError(err.message);
     showAuthStep('signin');
   }
