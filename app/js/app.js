@@ -1527,7 +1527,19 @@ async function startApp(coupleId, role){
   renderAll();
 }
 
+// Supabase déclenche onAuthStateChange avec un événement "INITIAL_SESSION" juste après
+// l'abonnement ci-dessous, en plus de l'appel explicite à boot() qui suit — les deux
+// peuvent donc se chevaucher au tout premier chargement de la page. Sans ce verrou, les
+// deux boot() concurrents rechargeaient chacun leur propre snapshot de store.expenses et
+// généraient chacun l'occurrence du mois manquante avant que l'autre n'ait fini d'insérer
+// la sienne : résultat, une dépense récurrente en double (ex. deux loyers) dès qu'un
+// nouveau mois démarrait. bootInFlight bloque cette course ; le `finally` le relâche pour
+// qu'un vrai événement de connexion ultérieur (après un clic sur "Se connecter") puisse
+// toujours déclencher boot() normalement.
+let bootInFlight = false;
 async function boot(){
+  if(bootInFlight) return;
+  bootInFlight = true;
   try{
     const session = await auth.getSession();
     if(!session){ showAuthStep('signin'); return; }
@@ -1540,6 +1552,8 @@ async function boot(){
   } catch(err){
     showAuthError(err.message);
     showAuthStep('signin');
+  } finally {
+    bootInFlight = false;
   }
 }
 

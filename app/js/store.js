@@ -237,8 +237,14 @@ async function refetchRecurring() {
 }
 
 // ----------------------------------------------------------------------------
-// Dépenses récurrentes : génère les occurrences manquantes jusqu'au mois réel courant
-// (idempotent — ne duplique jamais une occurrence déjà créée pour un modèle+mois donnés).
+// Dépenses récurrentes : génère les occurrences manquantes jusqu'au mois réel courant.
+//
+// Le tri "already exists dans store.expenses" ci-dessous ne suffit pas à lui seul à
+// empêcher les doublons : deux appels concurrents (ex. deux appareils ouverts au même
+// moment, ou un boot() dupliqué côté client) peuvent tous les deux constater l'absence
+// d'une occurrence avant que l'un des deux n'ait fini de l'insérer. On s'appuie donc en
+// plus sur une contrainte unique côté base (recurring_id, date — voir schema.sql) et un
+// upsert "ignore les doublons" : même en cas de course, un seul exemplaire survit.
 // ----------------------------------------------------------------------------
 export async function generateRecurringOccurrences() {
   const nowMk = currentMonthKey();
@@ -265,7 +271,9 @@ export async function generateRecurringOccurrences() {
     }
   });
   if (rows.length) {
-    const { error } = await supabase.from('expenses').insert(rows);
+    const { error } = await supabase
+      .from('expenses')
+      .upsert(rows, { onConflict: 'recurring_id,date', ignoreDuplicates: true });
     if (error) throw error;
     await refetchExpenses();
   }

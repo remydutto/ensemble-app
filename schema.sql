@@ -71,7 +71,12 @@ create table expenses (
   amount numeric(10,2) not null check (amount > 0),
   paid_by text not null check (paid_by in ('a','b')),
   recurring_id uuid references recurring_expenses(id) on delete set null,
-  created_at timestamptz not null default now()
+  created_at timestamptz not null default now(),
+  -- Empêche deux occurrences pour le même modèle récurrent et le même mois (la date
+  -- générée pour un couple recurring_id+mois donné est toujours la même, voir
+  -- generateRecurringOccurrences dans store.js). Les NULL ne sont jamais considérés
+  -- comme égaux entre eux, donc ça ne contraint en rien les dépenses manuelles.
+  unique (recurring_id, date)
 );
 
 -- ----------------------------------------------------------------------------
