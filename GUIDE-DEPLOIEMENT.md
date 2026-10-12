@@ -92,7 +92,7 @@ Contrairement à l'ancienne version (lien de connexion par email), la connexion 
 
 Deux GitHub Actions tournent automatiquement dans le dépôt (visibles dans l'onglet **Actions** du repo) :
 
-- **Keep Supabase Awake** (`.github/workflows/keep-alive.yml`) : ping le projet Supabase deux fois par semaine pour éviter la mise en pause automatique après 7 jours d'inactivité (limite du plan gratuit).
+- **Keep Supabase Awake** (`.github/workflows/keep-alive.yml`) : ping le projet Supabase tous les jours (une lecture, puis une écriture via la fonction `ping_heartbeat` de `schema.sql`) pour éviter la mise en pause automatique après 7 jours d'inactivité (limite du plan gratuit). Le workflow échoue, et GitHub t'envoie un mail, si Supabase ne répond pas.
 - **Backup Supabase Data** : sauvegarde toutes les données (dépenses, catégories, etc.) chaque semaine dans un second dépôt GitHub **privé**, séparé de celui du code (le plan gratuit Supabase n'inclut pas de sauvegarde automatique). Nécessite un secret GitHub `SUPABASE_SECRET_KEY` (la clé `service_role` de l'étape 1.6) configuré dans **Settings → Secrets and variables → Actions** du dépôt de sauvegarde.
 
 ## Notes techniques (au cas où)

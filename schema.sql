@@ -210,3 +210,31 @@ begin
   return target_couple_id;
 end;
 $$;
+
+-- ============================================================================
+-- Battement de cœur : une écriture quotidienne faite par le workflow GitHub
+-- "Keep Supabase Awake", pour que le projet ne soit pas mis en pause.
+-- ============================================================================
+create table if not exists heartbeat (
+  id int primary key default 1 check (id = 1),   -- une seule ligne
+  last_ping timestamptz not null default now(),
+  ping_count bigint not null default 0
+);
+insert into heartbeat (id) values (1) on conflict do nothing;
+
+-- RLS activée sans aucune policy : personne ne lit ni n'écrit la table directement.
+alter table heartbeat enable row level security;
+
+-- Seul point d'entrée, appelable sans être connecté : met à jour l'horodatage et le renvoie.
+create or replace function ping_heartbeat()
+returns timestamptz
+language sql
+security definer
+set search_path = public
+as $$
+  update heartbeat set last_ping = now(), ping_count = ping_count + 1
+  where id = 1
+  returning last_ping;
+$$;
+
+grant execute on function ping_heartbeat() to anon;
